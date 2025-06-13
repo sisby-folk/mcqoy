@@ -32,6 +32,9 @@
 			"dev.sisby.mcqoy.McQoy"
 		],
 		"client": [
+		],
+		"modmenu": [
+			"dev.sisby.mcqoy.McQoyModMenu"
 		]
 	}
 }

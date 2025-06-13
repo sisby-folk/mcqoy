@@ -10,6 +10,9 @@ version = "$modVersion+$branchName"
 archivesBaseName = project.slug
 
 repositories {
+	maven { url "https://repo.sleeping.town/" }
+	maven { url "https://maven.isxander.dev/releases" }
+	maven { url "https://maven.terraformersmc.com/" }
 }
 
 dependencies {
@@ -18,6 +21,12 @@ dependencies {
 
 	modImplementation libs.fl
 	modImplementation libs.fapi
+	implementation libs.kaleido
+	modImplementation libs.yacl
+
+	modImplementation "com.terraformersmc:modmenu:11.0.3"
+
+	include libs.kaleido
 }
 
 processResources {
@@ -36,6 +45,7 @@ processResources {
 		mc            : compatibleVersions.split(", ")[0],
 		fl            : libs.versions.fl.get(),
 		fapi          : libs.versions.fapi.get(),
+		yacl          : libs.versions.yacl.get(),
 	]
 	inputs.properties meta
 	filesMatching("*.mod.json") { expand(meta) }
@@ -80,5 +90,6 @@ modrinth {
 	syncBodyFrom = "<!--DO NOT EDIT MANUALLY: synced from gh readme-->\n" + rootProject.file("README.md").text
 	dependencies {
 		required.version "fabric-api", libs.versions.fapi.get()
+		required.version "yacl", libs.versions.yacl.get()
 	}
 }
