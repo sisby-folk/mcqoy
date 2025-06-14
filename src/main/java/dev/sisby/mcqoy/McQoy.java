@@ -1,9 +1,11 @@
 package dev.sisby.mcqoy;
 
 import dev.isxander.yacl3.api.ConfigCategory;
+import dev.isxander.yacl3.api.ListOption;
 import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.OptionDescription;
 import dev.isxander.yacl3.api.YetAnotherConfigLib;
+import dev.isxander.yacl3.api.controller.ControllerBuilder;
 import dev.isxander.yacl3.api.controller.DoubleFieldControllerBuilder;
 import dev.isxander.yacl3.api.controller.DoubleSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.EnumControllerBuilder;
@@ -21,7 +23,9 @@ import folk.sisby.kaleido.lib.quiltconfig.api.annotations.Comment;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.DisplayName;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.DisplayNameConvention;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.TrackedValue;
+import folk.sisby.kaleido.lib.quiltconfig.api.values.ValueList;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.ValueTreeNode;
+import folk.sisby.kaleido.lib.quiltconfig.impl.values.ValueListImpl;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.screen.Screen;
@@ -32,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.function.Function;
 
 public class McQoy implements ModInitializer {
 	public static final String ID = "mcqoy";
@@ -54,24 +59,7 @@ public class McQoy implements ModInitializer {
 			);
 			Text displayName = getDisplayName(field);
 			OptionDescription description = OptionDescription.of(getComments(field).stream().map(Text::of).toArray(Text[]::new));
-			Constraint.Range<?> tempRangeConstraint = null;
-			for (Constraint<?> constraint : field.constraints()) {
-				if (constraint instanceof Constraint.Range<?> range) {
-					tempRangeConstraint = range;
-					break;
-				}
-			}
-			final Constraint.Range<?> rangeConstraint = tempRangeConstraint;
-			switch (field.getDefaultValue()) {
-				case Boolean ignored -> boolOption((TrackedValue<Boolean>) field, category, displayName, description);
-				case String ignored -> stringOption((TrackedValue<String>) field, category, displayName, description);
-				case Integer ignored -> intOption((TrackedValue<Integer>) field, category, displayName, description, rangeConstraint);
-				case Long ignored -> longOption((TrackedValue<Long>) field, category, displayName, description, rangeConstraint);
-				case Float ignored -> floatOption((TrackedValue<Float>) field, category, displayName, description, rangeConstraint);
-				case Double ignored -> doubleOption((TrackedValue<Double>) field, category, displayName, description, rangeConstraint);
-				case Enum def -> enumOption(category, displayName, description, field, def);
-				default -> LOGGER.info("[McQoy] Unfamiliar with field {} of class {} - skipping it!", field.key().getLastComponent(), field.getDefaultValue().getClass());
-			}
+			mapAndAddField(field, category, displayName, description);
 		}
 		for (ConfigCategory.Builder s : categories.values()) {
 			builder.category(s.build());
@@ -81,55 +69,98 @@ public class McQoy implements ModInitializer {
 		return builder.build().generateScreen(parent);
 	}
 
-	private static void boolOption(TrackedValue<Boolean> field, ConfigCategory.Builder category, Text displayName, OptionDescription description) {
-		category.option(Option.<Boolean>createBuilder().name(displayName).description(description).binding(field.getDefaultValue(), field::value, field::setValue).controller(
-			TickBoxControllerBuilder::create
-		).build());
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	private static void mapAndAddField(TrackedValue<?> field, ConfigCategory.Builder category, Text displayName, OptionDescription description) {
+		Constraint.Range<?> tempRangeConstraint = null;
+		for (Constraint<?> constraint : field.constraints()) {
+			if (constraint instanceof Constraint.Range<?> range) {
+				tempRangeConstraint = range;
+				break;
+			}
+		}
+		final Constraint.Range<?> rangeConstraint = tempRangeConstraint;
+		switch (field.getDefaultValue()) {
+			case Boolean ignored -> singleOption((TrackedValue<Boolean>) field, category, displayName, description, TickBoxControllerBuilder::create);
+			case String ignored -> singleOption((TrackedValue<String>) field, category, displayName, description, StringControllerBuilder::create);
+			case Integer ignored -> singleOption((TrackedValue<Integer>) field, category, displayName, description, intOrSliderController(rangeConstraint));
+			case Long ignored -> singleOption((TrackedValue<Long>) field, category, displayName, description, longOrSliderController(rangeConstraint));
+			case Float ignored -> singleOption((TrackedValue<Float>) field, category, displayName, description, floatOrSliderController(rangeConstraint));
+			case Double ignored -> singleOption((TrackedValue<Double>) field, category, displayName, description, doubleOrSliderController(rangeConstraint));
+			case Enum def -> enumOption(field, category, displayName, description, def);
+			case ValueListImpl<?> list -> {
+				switch (list.getDefaultValue()) {
+					case Boolean ignored -> listOption((TrackedValue<ValueList<Boolean>>) field, category, displayName, description, TickBoxControllerBuilder::create);
+					case String ignored -> listOption((TrackedValue<ValueList<String>>) field, category, displayName, description, StringControllerBuilder::create);
+					case Integer ignored -> listOption((TrackedValue<ValueList<Integer>>) field, category, displayName, description, intOrSliderController(rangeConstraint));
+					case Long ignored -> listOption((TrackedValue<ValueList<Long>>) field, category, displayName, description, longOrSliderController(rangeConstraint));
+					case Float ignored -> listOption((TrackedValue<ValueList<Float>>) field, category, displayName, description, floatOrSliderController(rangeConstraint));
+					case Double ignored -> listOption((TrackedValue<ValueList<Double>>) field, category, displayName, description, doubleOrSliderController(rangeConstraint));
+					case Enum def -> enumListOption(field, category, displayName, description, list, def);
+					default -> LOGGER.warn("[McQoy] Unfamiliar with list field {} of class {} - skipping it!", field.key().getLastComponent(), list.getDefaultValue().getClass());
+				}
+			}
+			default -> LOGGER.warn("[McQoy] Unfamiliar with field {} of class {} - skipping it!", field.key().getLastComponent(), field.getDefaultValue().getClass());
+		}
 	}
 
-	private static void stringOption(TrackedValue<String> field, ConfigCategory.Builder category, Text displayName, OptionDescription description) {
-		category.option(Option.<String>createBuilder().name(displayName).description(description).binding(field.getDefaultValue(), field::value, field::setValue).controller(
-			StringControllerBuilder::create
-		).build());
+	private static <T> void singleOption(TrackedValue<T> field, ConfigCategory.Builder category, Text displayName, OptionDescription description, Function<Option<T>, ControllerBuilder<T>> controller) {
+		category.option(Option.<T>createBuilder().name(displayName).description(description).binding(field.getDefaultValue(), field::value, field::setValue).controller(controller).build());
 	}
 
-	private static void intOption(TrackedValue<Integer> field, ConfigCategory.Builder category, Text displayName, OptionDescription description, Constraint.Range<?> rangeConstraint) {
-		category.option(Option.<Integer>createBuilder().name(displayName).description(description).binding(field.getDefaultValue(), field::value, field::setValue).controller(
-			rangeConstraint == null ? IntegerFieldControllerBuilder::create : opt -> IntegerSliderControllerBuilder.create(opt)
-				.range((Integer) rangeConstraint.min(), (Integer) rangeConstraint.max())
-				.step(1)
-		).build());
+	private static <T> void listOption(TrackedValue<ValueList<T>> field, ConfigCategory.Builder category, Text displayName, OptionDescription description, Function<Option<T>, ControllerBuilder<T>> controller) {
+		category.group(ListOption.<T>createBuilder().name(displayName).description(description).binding((field.getDefaultValue()), field::value,
+			l -> {
+				field.value().clear();
+				field.value().addAll(l);
+			}
+		).controller(controller).initial(field.getDefaultValue().getDefaultValue()).build());
 	}
 
-	private static void longOption(TrackedValue<Long> field, ConfigCategory.Builder category, Text displayName, OptionDescription description, Constraint.Range<?> rangeConstraint) {
-		category.option(Option.<Long>createBuilder().name(displayName).description(description).binding(field.getDefaultValue(), field::value, field::setValue).controller(
-			rangeConstraint == null ? LongFieldControllerBuilder::create : opt -> LongSliderControllerBuilder.create(opt)
-				.range((Long) rangeConstraint.min(), (Long) rangeConstraint.max())
-				.step(1L)
-		).build());
-	}
-
-	private static void floatOption(TrackedValue<Float> field, ConfigCategory.Builder category, Text displayName, OptionDescription description, Constraint.Range<?> rangeConstraint) {
-		category.option(Option.<Float>createBuilder().name(displayName).description(description).binding(field.getDefaultValue(), field::value, field::setValue).controller(
-			rangeConstraint == null ? FloatFieldControllerBuilder::create : opt -> FloatSliderControllerBuilder.create(opt)
-				.range((Float) rangeConstraint.min(), (Float) rangeConstraint.max())
-				.step(0.01F)
-		).build());
-	}
-
-	private static void doubleOption(TrackedValue<Double> field, ConfigCategory.Builder category, Text displayName, OptionDescription description, Constraint.Range<?> rangeConstraint) {
-		category.option(Option.<Double>createBuilder().name(displayName).description(description).binding(field.getDefaultValue(), field::value, field::setValue).controller(
-			rangeConstraint == null ? DoubleFieldControllerBuilder::create : opt -> DoubleSliderControllerBuilder.create(opt)
-				.range((Double) rangeConstraint.min(), (Double) rangeConstraint.max())
-				.step(0.01)
+	@SuppressWarnings("unchecked")
+	private static <T extends Enum<T>> void enumOption(TrackedValue<?> field, ConfigCategory.Builder category, Text displayName, OptionDescription description, T defaultValue) {
+		category.option(Option.<T>createBuilder().name(displayName).description(description).binding(defaultValue, () -> (T) field.value(), v -> ((TrackedValue<T>) field).setValue(v)).controller(
+			o -> EnumControllerBuilder.create(o).enumClass(defaultValue.getDeclaringClass())
 		).build());
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <T extends Enum<T>> void enumOption(ConfigCategory.Builder category, Text displayName, OptionDescription description, TrackedValue<?> field, T defaultValue) {
-		category.option(Option.<T>createBuilder().name(displayName).description(description).binding(defaultValue, () -> (T) field.value(), v -> ((TrackedValue<T>) field).setValue(v)).controller(
-			o -> EnumControllerBuilder.create(o).enumClass(defaultValue.getDeclaringClass())
-		).build());
+	private static <T extends Enum<T>> void enumListOption(TrackedValue<?> field, ConfigCategory.Builder category, Text displayName, OptionDescription description, ValueList<?> defaultList, T defaultValue) {
+		category.group(ListOption.<T>createBuilder().name(displayName).description(description).binding((List<T>) defaultList, () -> (ValueList<T>) field.value(),
+			l -> {
+				((TrackedValue<ValueList<T>>) field).value().clear();
+				((TrackedValue<ValueList<T>>) field).value().addAll(l);
+			}
+		).controller(o -> EnumControllerBuilder.create(o).enumClass(defaultValue.getDeclaringClass())).initial(defaultValue).build());
+	}
+
+	private static Function<Option<Integer>, ControllerBuilder<Integer>> intOrSliderController(Constraint.Range<?> rangeConstraint) {
+		if (rangeConstraint == null) return IntegerFieldControllerBuilder::create;
+		return opt -> IntegerSliderControllerBuilder.create(opt)
+			.range((Integer) rangeConstraint.min(), (Integer) rangeConstraint.max())
+			.step(1);
+	}
+
+	private static Function<Option<Long>, ControllerBuilder<Long>> longOrSliderController(Constraint.Range<?> rangeConstraint) {
+		if (rangeConstraint == null) return LongFieldControllerBuilder::create;
+		return opt -> LongSliderControllerBuilder.create(opt)
+			.range((Long) rangeConstraint.min(), (Long) rangeConstraint.max())
+			.step(1L);
+	}
+
+	private static Function<Option<Float>, ControllerBuilder<Float>> floatOrSliderController(Constraint.Range<?> rangeConstraint) {
+		if (rangeConstraint == null) return FloatFieldControllerBuilder::create;
+		return opt -> FloatSliderControllerBuilder.create(opt)
+			.range((Float) rangeConstraint.min(), (Float) rangeConstraint.max())
+			.step(0.01F)
+			.formatValue(f -> Text.of("%.2f".formatted(f)));
+	}
+
+	private static Function<Option<Double>, ControllerBuilder<Double>> doubleOrSliderController(Constraint.Range<?> rangeConstraint) {
+		if (rangeConstraint == null) return DoubleFieldControllerBuilder::create;
+		return opt -> DoubleSliderControllerBuilder.create(opt)
+			.range((Double) rangeConstraint.min(), (Double) rangeConstraint.max())
+			.step(0.01)
+			.formatValue(f -> Text.of("%.2f".formatted(f)));
 	}
 
 	public static Text getDisplayName(ValueTreeNode value) {

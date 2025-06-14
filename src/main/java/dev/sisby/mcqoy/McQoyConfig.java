@@ -4,6 +4,7 @@ import folk.sisby.kaleido.api.ReflectiveConfig;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.Comment;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.DisplayName;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.DisplayNameConvention;
+import folk.sisby.kaleido.lib.quiltconfig.api.annotations.FloatRange;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.IntegerRange;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.SerializedNameConvention;
 import folk.sisby.kaleido.lib.quiltconfig.api.metadata.NamingSchemes;
@@ -32,6 +33,11 @@ public class McQoyConfig extends ReflectiveConfig {
 		.put("coal miner", false)
 		.put("torpedo technician", false)
 		.build();
+
+
+	@Comment("Height (in metres)")
+	@FloatRange(min = 1.0F, max = 3.0F)
+	public final TrackedValue<Float> height = value(1.80F);
 
 	@Comment("(Aside from a touch of arthritis)")
 	public final TrackedValue<String> medicalStatus = value("I think, pretty good!");
