@@ -22,6 +22,7 @@ import folk.sisby.kaleido.lib.quiltconfig.api.Constraint;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.Comment;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.DisplayName;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.DisplayNameConvention;
+import folk.sisby.kaleido.lib.quiltconfig.api.metadata.NamingSchemes;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.TrackedValue;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.ValueList;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.ValueTreeNode;
@@ -36,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 public class McQoy implements ModInitializer {
@@ -55,7 +57,7 @@ public class McQoy implements ModInitializer {
 		for (TrackedValue<?> field : config.values()) {
 			ConfigCategory.Builder category = categories.computeIfAbsent(
 				field.key().length() == 1 ? (config.family().isEmpty() ? config.id() : config.family()) : field.key().getKeyComponent(0),
-				k -> ConfigCategory.createBuilder().name(Text.of(k))
+				k -> ConfigCategory.createBuilder().name(Text.of(Objects.requireNonNullElse(config.metadata(DisplayNameConvention.TYPE), NamingSchemes.SPACE_SEPARATED_LOWER_CASE_INITIAL_UPPER_CASE).coerce(k)))
 			);
 			Text displayName = getDisplayName(field);
 			OptionDescription description = OptionDescription.of(getComments(field).stream().map(Text::of).toArray(Text[]::new));
@@ -169,10 +171,8 @@ public class McQoy implements ModInitializer {
 				return Text.translatable(value.metadata(DisplayName.TYPE).getName());
 			}
 			return Text.literal(value.metadata(DisplayName.TYPE).getName());
-		} else if (value.hasMetadata(DisplayNameConvention.TYPE)) {
-			return Text.literal(value.metadata(DisplayNameConvention.TYPE).coerce(value.key().getLastComponent()));
 		} else {
-			return Text.literal(value.key().getLastComponent());
+			return Text.literal(Objects.requireNonNullElse(value.metadata(DisplayNameConvention.TYPE), NamingSchemes.SPACE_SEPARATED_LOWER_CASE_INITIAL_UPPER_CASE).coerce(value.key().getLastComponent()));
 		}
 	}
 
