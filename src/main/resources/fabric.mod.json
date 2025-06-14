@@ -23,15 +23,14 @@
 	"depends": {
 		"minecraft": ">=${mc}",
 		"fabricloader": ">=${fl}",
-		"fabric-api": ">=${fapi}"
+		"fabric-api": ">=${fapi}",
+		"yacl": ">=${yacl}"
 	},
 	"suggests": {
 	},
 	"entrypoints": {
 		"main": [
 			"dev.sisby.mcqoy.McQoy"
-		],
-		"client": [
 		],
 		"modmenu": [
 			"dev.sisby.mcqoy.McQoyModMenu"
