@@ -29,7 +29,7 @@ This mod seeks out all registered `ReflectiveConfig`-based configs, matches them
 
 The thing is, QConf is stuffed to the nines with helpful annotations suitable for (or even designed for) a config GUI to read.
 
-Despite being internally barebones, McQoy simply reads these values and passes them right on to YACL - you'd never guess it didn't require a real dependency mod dependency.
+Despite being internally barebones, McQoy simply reads these values and passes them right on to YACL - you'd never guess it didn't require a real mod dependency.
 
 ### I AM A DOCTOR, NOT AN ENGINEER
 
