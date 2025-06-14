@@ -4,7 +4,11 @@ import dev.isxander.yacl3.api.ConfigCategory;
 import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.OptionDescription;
 import dev.isxander.yacl3.api.YetAnotherConfigLib;
+import dev.isxander.yacl3.api.controller.DoubleFieldControllerBuilder;
+import dev.isxander.yacl3.api.controller.DoubleSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.EnumControllerBuilder;
+import dev.isxander.yacl3.api.controller.FloatFieldControllerBuilder;
+import dev.isxander.yacl3.api.controller.FloatSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.IntegerFieldControllerBuilder;
 import dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.LongFieldControllerBuilder;
@@ -63,6 +67,8 @@ public class McQoy implements ModInitializer {
 				case String ignored -> stringOption((TrackedValue<String>) field, category, displayName, description);
 				case Integer ignored -> intOption((TrackedValue<Integer>) field, category, displayName, description, rangeConstraint);
 				case Long ignored -> longOption((TrackedValue<Long>) field, category, displayName, description, rangeConstraint);
+				case Float ignored -> floatOption((TrackedValue<Float>) field, category, displayName, description, rangeConstraint);
+				case Double ignored -> doubleOption((TrackedValue<Double>) field, category, displayName, description, rangeConstraint);
 				case Enum def -> enumOption(category, displayName, description, field, def);
 				default -> LOGGER.info("[McQoy] Unfamiliar with field {} of class {} - skipping it!", field.key().getLastComponent(), field.getDefaultValue().getClass());
 			}
@@ -76,15 +82,15 @@ public class McQoy implements ModInitializer {
 	}
 
 	private static void boolOption(TrackedValue<Boolean> field, ConfigCategory.Builder category, Text displayName, OptionDescription description) {
-		category.option(Option.<Boolean>createBuilder().name(displayName).description(description).binding(field.getDefaultValue(), field::value, field::setValue)
-			.controller(TickBoxControllerBuilder::create)
-			.build());
+		category.option(Option.<Boolean>createBuilder().name(displayName).description(description).binding(field.getDefaultValue(), field::value, field::setValue).controller(
+			TickBoxControllerBuilder::create
+		).build());
 	}
 
 	private static void stringOption(TrackedValue<String> field, ConfigCategory.Builder category, Text displayName, OptionDescription description) {
-		category.option(Option.<String>createBuilder().name(displayName).description(description).binding(field.getDefaultValue(), field::value, field::setValue)
-			.controller(StringControllerBuilder::create)
-			.build());
+		category.option(Option.<String>createBuilder().name(displayName).description(description).binding(field.getDefaultValue(), field::value, field::setValue).controller(
+			StringControllerBuilder::create
+		).build());
 	}
 
 	private static void intOption(TrackedValue<Integer> field, ConfigCategory.Builder category, Text displayName, OptionDescription description, Constraint.Range<?> rangeConstraint) {
@@ -103,11 +109,27 @@ public class McQoy implements ModInitializer {
 		).build());
 	}
 
+	private static void floatOption(TrackedValue<Float> field, ConfigCategory.Builder category, Text displayName, OptionDescription description, Constraint.Range<?> rangeConstraint) {
+		category.option(Option.<Float>createBuilder().name(displayName).description(description).binding(field.getDefaultValue(), field::value, field::setValue).controller(
+			rangeConstraint == null ? FloatFieldControllerBuilder::create : opt -> FloatSliderControllerBuilder.create(opt)
+				.range((Float) rangeConstraint.min(), (Float) rangeConstraint.max())
+				.step(0.01F)
+		).build());
+	}
+
+	private static void doubleOption(TrackedValue<Double> field, ConfigCategory.Builder category, Text displayName, OptionDescription description, Constraint.Range<?> rangeConstraint) {
+		category.option(Option.<Double>createBuilder().name(displayName).description(description).binding(field.getDefaultValue(), field::value, field::setValue).controller(
+			rangeConstraint == null ? DoubleFieldControllerBuilder::create : opt -> DoubleSliderControllerBuilder.create(opt)
+				.range((Double) rangeConstraint.min(), (Double) rangeConstraint.max())
+				.step(0.01)
+		).build());
+	}
+
 	@SuppressWarnings("unchecked")
 	private static <T extends Enum<T>> void enumOption(ConfigCategory.Builder category, Text displayName, OptionDescription description, TrackedValue<?> field, T defaultValue) {
-		category.option(Option.<T>createBuilder().name(displayName).description(description).binding(defaultValue, () -> (T) field.value(), v -> ((TrackedValue<T>) field).setValue(v))
-			.controller(o -> EnumControllerBuilder.create(o).enumClass(defaultValue.getDeclaringClass()))
-			.build());
+		category.option(Option.<T>createBuilder().name(displayName).description(description).binding(defaultValue, () -> (T) field.value(), v -> ((TrackedValue<T>) field).setValue(v)).controller(
+			o -> EnumControllerBuilder.create(o).enumClass(defaultValue.getDeclaringClass())
+		).build());
 	}
 
 	public static Text getDisplayName(ValueTreeNode value) {
