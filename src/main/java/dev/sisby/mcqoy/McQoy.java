@@ -4,12 +4,14 @@ import dev.isxander.yacl3.api.ConfigCategory;
 import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.OptionDescription;
 import dev.isxander.yacl3.api.YetAnotherConfigLib;
+import dev.isxander.yacl3.api.controller.EnumControllerBuilder;
 import dev.isxander.yacl3.api.controller.IntegerFieldControllerBuilder;
 import dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.LongFieldControllerBuilder;
 import dev.isxander.yacl3.api.controller.LongSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.StringControllerBuilder;
 import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
+import folk.sisby.kaleido.lib.quiltconfig.api.Config;
 import folk.sisby.kaleido.lib.quiltconfig.api.Constraint;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.Comment;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.DisplayName;
@@ -38,28 +40,14 @@ public class McQoy implements ModInitializer {
 
 	}
 
-	private static ConfigCategory.Builder createCategory(String section, LinkedHashMap<String, ConfigCategory.Builder> categories) {
-		if (categories.containsKey(section)) {
-			return categories.get(section);
-		} else {
-			String sectionKey = section;
-			if (section == null) {
-				sectionKey = "";
-			} else {
-				sectionKey += "_";
-			}
-			ConfigCategory.Builder category = ConfigCategory.createBuilder().name(Text.translatable("config.item-descriptions.%stitle".formatted(sectionKey)));
-			categories.put(section, category);
-			return category;
-		}
-	}
-
-	public static Screen createScreen(Screen parent) {
+	public static Screen createScreen(Screen parent, Config config) {
 		final YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder().title(Text.of(FabricLoader.getInstance().getModContainer(CONFIG.id()).map(m -> m.getMetadata().getName()).orElse(null)));
 		LinkedHashMap<String, ConfigCategory.Builder> categories = new LinkedHashMap<>();
-		for (TrackedValue<?> field : CONFIG.values()) {
-			ConfigCategory.Builder category = ConfigCategory.createBuilder().name(getDisplayName(field));
-			categories.put(field.key().toString(), category);
+		for (TrackedValue<?> field : config.values()) {
+			ConfigCategory.Builder category = categories.computeIfAbsent(
+				field.key().length() == 1 ? (config.family().isEmpty() ? config.id() : config.family()) : field.key().getKeyComponent(0),
+				k -> ConfigCategory.createBuilder().name(Text.of(k))
+			);
 			Text displayName = getDisplayName(field);
 			OptionDescription description = OptionDescription.of(getComments(field).stream().map(Text::of).toArray(Text[]::new));
 			Constraint.Range<?> tempRangeConstraint = null;
@@ -71,30 +59,11 @@ public class McQoy implements ModInitializer {
 			}
 			final Constraint.Range<?> rangeConstraint = tempRangeConstraint;
 			switch (field.getDefaultValue()) {
-				case Boolean def -> category.option(Option.<Boolean>createBuilder().name(displayName).description(description).binding(def,
-						()-> (Boolean) field.value(),
-						(value)-> ((TrackedValue<Boolean>) field).setValue(value)
-					)
-					.controller(TickBoxControllerBuilder::create)
-					.build());
-				case String def -> category.option(Option.<String>createBuilder().name(displayName).description(description).binding(def,
-						()-> (String) field.value(),
-						(value)->((TrackedValue<String>) field).setValue(value)
-					)
-					.controller(StringControllerBuilder::create)
-					.build());
-				case Integer def -> category.option(Option.<Integer>createBuilder().name(displayName).description(description).binding(def,
-						()-> (Integer) field.value(),
-						(value)->((TrackedValue<Integer>) field).setValue(value)
-					)
-					.controller(rangeConstraint == null ? IntegerFieldControllerBuilder::create : opt -> IntegerSliderControllerBuilder.create(opt).range((Integer) rangeConstraint.min(), (Integer) rangeConstraint.max()).step(1))
-					.build());
-				case Long def -> category.option(Option.<Long>createBuilder().name(displayName).description(description).binding(def,
-						()-> (Long) field.value(),
-						(value)->((TrackedValue<Long>) field).setValue(value)
-					)
-					.controller(rangeConstraint == null ? LongFieldControllerBuilder::create : opt -> LongSliderControllerBuilder.create(opt).range((Long) rangeConstraint.min(), (Long) rangeConstraint.max()).step(1L))
-					.build());
+				case Boolean ignored -> boolOption((TrackedValue<Boolean>) field, category, displayName, description);
+				case String ignored -> stringOption((TrackedValue<String>) field, category, displayName, description);
+				case Integer ignored -> intOption((TrackedValue<Integer>) field, category, displayName, description, rangeConstraint);
+				case Long ignored -> longOption((TrackedValue<Long>) field, category, displayName, description, rangeConstraint);
+				case Enum def -> enumOption(category, displayName, description, field, def);
 				default -> LOGGER.info("[McQoy] Unfamiliar with field {} of class {} - skipping it!", field.key().getLastComponent(), field.getDefaultValue().getClass());
 			}
 		}
@@ -104,6 +73,41 @@ public class McQoy implements ModInitializer {
 
 		builder.save(CONFIG::save);
 		return builder.build().generateScreen(parent);
+	}
+
+	private static void boolOption(TrackedValue<Boolean> field, ConfigCategory.Builder category, Text displayName, OptionDescription description) {
+		category.option(Option.<Boolean>createBuilder().name(displayName).description(description).binding(field.getDefaultValue(), field::value, field::setValue)
+			.controller(TickBoxControllerBuilder::create)
+			.build());
+	}
+
+	private static void stringOption(TrackedValue<String> field, ConfigCategory.Builder category, Text displayName, OptionDescription description) {
+		category.option(Option.<String>createBuilder().name(displayName).description(description).binding(field.getDefaultValue(), field::value, field::setValue)
+			.controller(StringControllerBuilder::create)
+			.build());
+	}
+
+	private static void intOption(TrackedValue<Integer> field, ConfigCategory.Builder category, Text displayName, OptionDescription description, Constraint.Range<?> rangeConstraint) {
+		category.option(Option.<Integer>createBuilder().name(displayName).description(description).binding(field.getDefaultValue(), field::value, field::setValue).controller(
+			rangeConstraint == null ? IntegerFieldControllerBuilder::create : opt -> IntegerSliderControllerBuilder.create(opt)
+				.range((Integer) rangeConstraint.min(), (Integer) rangeConstraint.max())
+				.step(1)
+		).build());
+	}
+
+	private static void longOption(TrackedValue<Long> field, ConfigCategory.Builder category, Text displayName, OptionDescription description, Constraint.Range<?> rangeConstraint) {
+		category.option(Option.<Long>createBuilder().name(displayName).description(description).binding(field.getDefaultValue(), field::value, field::setValue).controller(
+			rangeConstraint == null ? LongFieldControllerBuilder::create : opt -> LongSliderControllerBuilder.create(opt)
+				.range((Long) rangeConstraint.min(), (Long) rangeConstraint.max())
+				.step(1L)
+		).build());
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T extends Enum<T>> void enumOption(ConfigCategory.Builder category, Text displayName, OptionDescription description, TrackedValue<?> field, T defaultValue) {
+		category.option(Option.<T>createBuilder().name(displayName).description(description).binding(defaultValue, () -> (T) field.value(), v -> ((TrackedValue<T>) field).setValue(v))
+			.controller(o -> EnumControllerBuilder.create(o).enumClass(defaultValue.getDeclaringClass()))
+			.build());
 	}
 
 	public static Text getDisplayName(ValueTreeNode value) {
