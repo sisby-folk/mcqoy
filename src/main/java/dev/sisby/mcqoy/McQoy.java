@@ -52,12 +52,12 @@ public class McQoy implements ModInitializer {
 	}
 
 	public static Screen createScreen(Screen parent, Config config) {
-		final YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder().title(Text.of(FabricLoader.getInstance().getModContainer(CONFIG.id()).map(m -> m.getMetadata().getName()).orElse(null)));
+		final YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder().title(Text.of("Config: " + NamingSchemes.TITLE_CASE.coerce(config.family().isEmpty() ? config.id() : config.family())));
 		LinkedHashMap<String, ConfigCategory.Builder> categories = new LinkedHashMap<>();
 		for (TrackedValue<?> field : config.values()) {
 			ConfigCategory.Builder category = categories.computeIfAbsent(
 				field.key().length() == 1 ? (config.family().isEmpty() ? config.id() : config.family()) : field.key().getKeyComponent(0),
-				k -> ConfigCategory.createBuilder().name(Text.of(Objects.requireNonNullElse(config.metadata(DisplayNameConvention.TYPE), NamingSchemes.SPACE_SEPARATED_LOWER_CASE_INITIAL_UPPER_CASE).coerce(k)))
+				k -> ConfigCategory.createBuilder().name(Text.of(Objects.requireNonNullElse(config.metadata(DisplayNameConvention.TYPE), NamingSchemes.TITLE_CASE).coerce(k)))
 			);
 			Text displayName = getDisplayName(field);
 			OptionDescription description = OptionDescription.of(getComments(field).stream().map(Text::of).toArray(Text[]::new));
