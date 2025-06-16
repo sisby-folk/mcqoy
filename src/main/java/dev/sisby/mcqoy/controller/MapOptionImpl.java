@@ -49,12 +49,12 @@ public final class MapOptionImpl<T> implements MapOption<T> {
     private final List<Runnable> refreshListeners;
     private int currentListenerDepth = 0;
 
-    public MapOptionImpl(@NotNull Text name, @NotNull OptionDescription description, @NotNull StateManager<Map<String, T>> stateManager, @NotNull Supplier<T> initialValue, @NotNull Function<MapOptionEntry<T>, Controller<T>> controllerFunction, ImmutableSet<OptionFlag> flags, boolean collapsed, boolean available, int minimumNumberOfEntries, int maximumNumberOfEntries, boolean insertEntriesAtEnd, Collection<OptionEventListener<Map<String, T>>> listeners) {
+    public MapOptionImpl(@NotNull Text name, @NotNull OptionDescription description, @NotNull StateManager<Map<String, T>> stateManager, @NotNull Supplier<T> initialValue, @NotNull Function<MapOptionEntry<T>, Controller<String>> keyControllerFunction, @NotNull Function<MapOptionEntry<T>, Controller<T>> controllerFunction, ImmutableSet<OptionFlag> flags, boolean collapsed, boolean available, int minimumNumberOfEntries, int maximumNumberOfEntries, boolean insertEntriesAtEnd, Collection<OptionEventListener<Map<String, T>>> listeners) {
         this.name = name;
         this.description = description;
         this.stateManager = stateManager;
         this.initialValue = initialValue;
-        this.entryFactory = new EntryFactory(controllerFunction);
+        this.entryFactory = new EntryFactory(keyControllerFunction, controllerFunction);
         this.entries = createEntries(binding().getValue());
         this.collapsed = collapsed;
         this.flags = flags;
@@ -122,7 +122,7 @@ public final class MapOptionImpl<T> implements MapOption<T> {
 
     @Override
     public @NotNull ImmutableMap<String, T> pendingValue() {
-        return ImmutableMap.copyOf(entries.stream().map(MapOptionEntry::pendingEntry).toList());
+        return ImmutableMap.copyOf(entries.stream().map(MapOptionEntry::pendingValue).toList());
     }
 
     @Override
@@ -271,14 +271,16 @@ public final class MapOptionImpl<T> implements MapOption<T> {
     }
 
     private class EntryFactory {
-        private final Function<MapOptionEntry<T>, Controller<T>> controllerFunction;
+        private final Function<MapOptionEntry<T>, Controller<String>> keyControllerFunction;
+        private final Function<MapOptionEntry<T>, Controller<T>> valueControllerFunction;
 
-        private EntryFactory(Function<MapOptionEntry<T>, Controller<T>> controllerFunction) {
-            this.controllerFunction = controllerFunction;
+        private EntryFactory(Function<MapOptionEntry<T>, Controller<String>> keyControllerFunction, Function<MapOptionEntry<T>, Controller<T>> controllerFunction) {
+            this.keyControllerFunction = keyControllerFunction;
+            this.valueControllerFunction = controllerFunction;
         }
 
         public MapOptionEntry<T> create(Map.Entry<String, T> initialValue) {
-            return new MapOptionEntryImpl<>(MapOptionImpl.this, initialValue, controllerFunction);
+            return new MapOptionEntryImpl<>(MapOptionImpl.this, initialValue, keyControllerFunction, valueControllerFunction);
         }
     }
 
@@ -286,7 +288,8 @@ public final class MapOptionImpl<T> implements MapOption<T> {
     public static final class BuilderImpl<T> implements Builder<T> {
         private Text name = Text.empty();
         private OptionDescription description = OptionDescription.EMPTY;
-        private Function<MapOptionEntry<T>, Controller<T>> controllerFunction;
+        private Function<MapOptionEntry<T>, Controller<String>> keyControllerFunction;
+        private Function<MapOptionEntry<T>, Controller<T>> valueControllerFunction;
         private final Set<OptionFlag> flags = new HashSet<>();
         private Supplier<T> initialValue;
         private boolean collapsed = false;
@@ -332,18 +335,12 @@ public final class MapOptionImpl<T> implements MapOption<T> {
         }
 
         @Override
-        public Builder<T> controller(@NotNull Function<Option<T>, ControllerBuilder<T>> controller) {
-            Validate.notNull(controller, "`controller` cannot be null");
+        public Builder<T> controllers(@NotNull Function<Option<String>, ControllerBuilder<String>> keyController, @NotNull Function<Option<T>, ControllerBuilder<T>> valueController) {
+            Validate.notNull(keyController, "`controller` cannot be null");
+            Validate.notNull(valueController, "`controller` cannot be null");
 
-            this.controllerFunction = opt -> controller.apply(opt).build();
-            return this;
-        }
-
-        @Override
-        public Builder<T> customController(@NotNull Function<MapOptionEntry<T>, Controller<T>> control) {
-            Validate.notNull(control, "`control` cannot be null");
-
-            this.controllerFunction = control;
+            this.keyControllerFunction = opt -> keyController.apply(new MapKeyOption<>(opt, opt2 -> keyController.apply(opt2).build())).build();
+            this.valueControllerFunction = opt -> valueController.apply(new MapValueOption<>(opt, opt2 -> valueController.apply(opt2).build())).build();
             return this;
         }
 
@@ -459,7 +456,8 @@ public final class MapOptionImpl<T> implements MapOption<T> {
 
         @Override
         public MapOption<T> build() {
-            Validate.notNull(controllerFunction, "`controller` must not be null");
+            Validate.notNull(keyControllerFunction, "`controller` must not be null");
+            Validate.notNull(valueControllerFunction, "`controller` must not be null");
             Validate.notNull(initialValue, "`initialValue` must not be null");
             Validate.isTrue(stateManager != null || binding != null, "Either a state manager or binding must be set");
 
@@ -467,7 +465,7 @@ public final class MapOptionImpl<T> implements MapOption<T> {
                 stateManager = StateManager.createSimple(binding);
             }
 
-            return new MapOptionImpl<>(name, description, stateManager, initialValue, controllerFunction, ImmutableSet.copyOf(flags), collapsed, available, minimumNumberOfEntries, maximumNumberOfEntries, insertEntriesAtEnd, listeners);
+            return new MapOptionImpl<>(name, description, stateManager, initialValue, keyControllerFunction, valueControllerFunction, ImmutableSet.copyOf(flags), collapsed, available, minimumNumberOfEntries, maximumNumberOfEntries, insertEntriesAtEnd, listeners);
         }
     }
 }

@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
-public interface MapOptionEntry<T> extends Option<T> {
+public interface MapOptionEntry<T> extends Option<Map.Entry<String, T>> {
     MapOption<T> parentGroup();
 
     @Override
@@ -19,6 +19,4 @@ public interface MapOptionEntry<T> extends Option<T> {
     default boolean available() {
         return parentGroup().available();
     }
-
-    @NotNull Map.Entry<String, T> pendingEntry();
 }

@@ -16,7 +16,8 @@ import java.util.List;
 
 public class MapEntryWidget extends AbstractWidget implements ParentElement {
     private final TooltipButtonWidget removeButton, moveUpButton, moveDownButton;
-    private final AbstractWidget entryWidget;
+    private final AbstractWidget keyWidget;
+    private final AbstractWidget valueWidget;
 
     private final MapOption<?> mapOption;
     private final MapOptionEntry<?> mapOptionEntry;
@@ -26,15 +27,19 @@ public class MapEntryWidget extends AbstractWidget implements ParentElement {
     private Element focused;
     private boolean dragging;
 
-    public MapEntryWidget(YACLScreen screen, MapOptionEntry<?> mapOptionEntry, AbstractWidget valueWidget) {
+    public MapEntryWidget(YACLScreen screen, MapOptionEntry<?> mapOptionEntry, AbstractWidget valueWidget, AbstractWidget keyWidget) {
         super(valueWidget.getDimension().withHeight(Math.max(valueWidget.getDimension().height(), 20) - ((mapOptionEntry.parentGroup().indexOf(mapOptionEntry) == mapOptionEntry.parentGroup().options().size() - 1) ? 0 : 2))); // -2 to remove the padding
         this.mapOptionEntry = mapOptionEntry;
         this.mapOption = mapOptionEntry.parentGroup();
         this.optionNameString = mapOptionEntry.name().getString().toLowerCase();
-        this.entryWidget = valueWidget;
+        this.keyWidget = keyWidget;
+        this.valueWidget = valueWidget;
 
 	    Dimension<Integer> dim = valueWidget.getDimension();
-	    valueWidget.setDimension(dim.clone().move(20 * 4, 0).expand(-20 * 5, 0));
+        Dimension<Integer> entryDim = dim.clone().move(20 * 2, 0).expand(-20 * 3, 0);
+
+        keyWidget.setDimension(entryDim.clone().setWidth(entryDim.width() / 2));
+        valueWidget.setDimension(entryDim.clone().setWidth(entryDim.width() / 2).move(keyWidget.getDimension().width(), 0));
 
         removeButton = new TooltipButtonWidget(screen, dim.xLimit() - 20, dim.y(), 20, 20, Text.literal("\u274c"), Text.translatable("yacl.list.remove"), btn -> {
             mapOption.removeEntry(mapOptionEntry);
@@ -69,12 +74,14 @@ public class MapEntryWidget extends AbstractWidget implements ParentElement {
         removeButton.setY(getDimension().y());
         moveUpButton.setY(getDimension().y());
         moveDownButton.setY(getDimension().y());
-        entryWidget.setDimension(entryWidget.getDimension().withY(getDimension().y()));
+        keyWidget.setDimension(keyWidget.getDimension().withY(getDimension().y()));
+        valueWidget.setDimension(valueWidget.getDimension().withY(getDimension().y()));
 
         removeButton.render(graphics, mouseX, mouseY, delta);
         moveUpButton.render(graphics, mouseX, mouseY, delta);
         moveDownButton.render(graphics, mouseX, mouseY, delta);
-        entryWidget.render(graphics, mouseX, mouseY, delta);
+        keyWidget.render(graphics, mouseX, mouseY, delta);
+        valueWidget.render(graphics, mouseX, mouseY, delta);
     }
 
     protected void updateButtonStates() {
@@ -85,12 +92,12 @@ public class MapEntryWidget extends AbstractWidget implements ParentElement {
 
     @Override
     public void unfocus() {
-        entryWidget.unfocus();
+        valueWidget.unfocus();
     }
 
     @Override
     public void appendNarrations(NarrationMessageBuilder builder) {
-        entryWidget.appendNarrations(builder);
+        valueWidget.appendNarrations(builder);
     }
 
     @Override
@@ -100,7 +107,7 @@ public class MapEntryWidget extends AbstractWidget implements ParentElement {
 
     @Override
     public List<? extends Element> children() {
-        return ImmutableList.of(moveUpButton, moveDownButton, entryWidget, removeButton);
+        return ImmutableList.of(moveUpButton, moveDownButton, valueWidget, removeButton);
     }
 
     @Override

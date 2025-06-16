@@ -2,7 +2,6 @@ package dev.sisby.mcqoy.controller;
 
 import com.google.common.collect.ImmutableList;
 import dev.isxander.yacl3.api.Binding;
-import dev.isxander.yacl3.api.Controller;
 import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.OptionDescription;
 import dev.isxander.yacl3.api.OptionEventListener;
@@ -70,15 +69,7 @@ public interface MapOption<T> extends OptionGroup, Option<Map<String, T>> {
          */
         MapOption.Builder<T> initial(@NotNull T initialValue);
 
-        MapOption.Builder<T> controller(@NotNull Function<Option<T>, ControllerBuilder<T>> controller);
-
-        /**
-         * Sets the controller for the option.
-         * This is how you interact and change the options.
-         *
-         * @see dev.isxander.yacl3.gui.controllers
-         */
-        MapOption.Builder<T> customController(@NotNull Function<MapOptionEntry<T>, Controller<T>> control);
+        MapOption.Builder<T> controllers(@NotNull Function<Option<String>, ControllerBuilder<String>> keyController, @NotNull Function<Option<T>, ControllerBuilder<T>> valueController);
 
         MapOption.Builder<T> state(@NotNull StateManager<Map<String, T>> stateManager);
 

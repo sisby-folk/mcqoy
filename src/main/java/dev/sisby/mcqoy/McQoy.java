@@ -138,7 +138,7 @@ public class McQoy implements ModInitializer {
 				field.value().clear();
 				field.value().putAll(m);
 			}
-		).controller(valueController).initial(field.getDefaultValue().getDefaultValue()).build());
+		).controllers(StringControllerBuilder::create, valueController).initial(field.getDefaultValue().getDefaultValue()).build());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -167,7 +167,7 @@ public class McQoy implements ModInitializer {
 				((TrackedValue<ValueMap<T>>) field).value().clear();
 				((TrackedValue<ValueMap<T>>) field).value().putAll(m);
 			}
-		).controller(o -> EnumControllerBuilder.create(o).enumClass(defaultValue.getDeclaringClass())).initial(defaultValue).build());
+		).controllers(StringControllerBuilder::create, o -> EnumControllerBuilder.create(o).enumClass(defaultValue.getDeclaringClass())).initial(defaultValue).build());
 	}
 
 	private static Function<Option<Integer>, ControllerBuilder<Integer>> intOrSliderController(Constraint.Range<?> rangeConstraint) {
