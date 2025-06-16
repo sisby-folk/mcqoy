@@ -4,6 +4,7 @@ import dev.isxander.yacl3.api.utils.Dimension;
 import dev.isxander.yacl3.gui.AbstractWidget;
 import dev.isxander.yacl3.gui.YACLScreen;
 import dev.isxander.yacl3.gui.controllers.ControllerWidget;
+import dev.isxander.yacl3.gui.controllers.TickBoxController;
 import net.minecraft.client.gui.DrawContext;
 
 public class EntryControllerElement<T> extends ControllerWidget<EntryController<T>> {
@@ -35,8 +36,13 @@ public class EntryControllerElement<T> extends ControllerWidget<EntryController<
 	@Override
 	public void setDimension(Dimension<Integer> dim) {
 		super.setDimension(dim);
-		this.keyWidget.setDimension(dim.withWidth(dim.width() / 2));
-		this.valueWidget.setDimension(dim.withWidth(dim.width() / 2).moved(dim.width() / 2, 0));
+		if (valueWidget instanceof TickBoxController.TickBoxControllerElement) {
+			this.keyWidget.setDimension(dim.withWidth(dim.width() - 20));
+			this.valueWidget.setDimension(dim.withWidth(20).moved(dim.width() - 20, 0));
+		} else {
+			this.keyWidget.setDimension(dim.withWidth(dim.width() / 2));
+			this.valueWidget.setDimension(dim.withWidth(dim.width() / 2).moved(dim.width() / 2, 0));
+		}
 	}
 
 	@Override
