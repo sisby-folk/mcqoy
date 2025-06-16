@@ -3,44 +3,53 @@
 <h1>QCONF OVER YACL (MCQOY)</h1>
 </center>
 
-<center><img alt="mod preview" src="https://upload.wikimedia.org/wikipedia/commons/9/90/DeForest_Kelley%2C_Dr._McCoy%2C_Star_Trek.jpg"/></center>
+<center><img alt="mod preview" src="https://cdn.modrinth.com/data/tNmWwdI2/images/b58da00b068e403fbf5a7335d750798fe7969e90.png"/></center>
 
 <center>
-<i>He's dead, Jim.</i> 
+<i>He's dead, Jim.</i><br/>
+Requires <a href="https://modrinth.com/mod/yacl">YACL</a>.
 </center>
 
 ---
 
-**McQoy** is a minimal compatibility layer that generates YACL configuration screens for QConfig mods.
+**McQoy** is a simple mod that automatically generates YACL configuration screens for mods using Kaleido.
+
+### IT SEEMS I'VE MISSED YOU
+
+Some mods use [Kaleido Config](https://github.com/sisby-folk/kaleido-config) to provide a `.toml` configuration - like our own [Surveyor](https://modrinth.com/mod/surveyor), or [Crunchy Crunchy](https://modrinth.com/mod/crunchy-crunchy-advancements), or [PicoHUD](https://modrinth.com/mod/picohud).
+
+The `.toml` files are very nice, but you can't edit them in-game. With McQoy, you can! Just drop in the mod and you're good.
+
+### I DON'T NEED A DOCTOR, I AM A DOCTOR
+
+To set this up for your own mod, just follow the [Kaleido readme](https://github.com/sisby-folk/kaleido-config) - then set McQoy as a dependency on modrinth (NOT in metadata!).
+
+<center><img alt="qconfig example" src="https://cdn.modrinth.com/data/tNmWwdI2/images/2b36d05c06cc8c9dcf11b2b22d66c607c2d80e6e.png"/></center>
+<center><i>You may find this arrangement terribly pleasant.</i></center>
+
+Just ensure that your config folder _or_ filename matches your mod ID, and you're good to go. 
+
+## IF I'M NOT CAREFUL, I'LL END UP TALKING TO MYSELF
+
+The use of McCoy is quite separated from its purpose and background, so here's that seperately:
 
 ### ALL I GOT LEFT IS MY BONES
 
-The misleadingly-named [Quilt Config](https://github.com/QuiltMC/quilt-config) isn't built on quilt - it's not even built on minecraft. Quilt Config is a _java_ configuration library.
+The misleadingly-named [Quilt Config](https://github.com/QuiltMC/quilt-config) isn't built on quilt, nor minecraft - It's a _pure-java_ configuration library.
 
-This means mods can JIJ it (or repackages like [Kaleido](https://github.com/sisby-folk/kaleido-config)) for a simple, clean-looking, file-based config that never breaks when minecraft updates.
+This comes with a very clear benefit - it works on every loader, and every version of minecraft, with no changes required. 
 
-### IF I'M NOT CAREFUL, I'LL END UP TALKING TO MYSELF
+### I'M NOT A MAGICIAN, SPOCK
 
-That's no fun though, is it? People want flashy, in-game-tweakable screens they can access through modmenu and forgelikes.
+Kaleido is just a wrapper for Quilt Config that shadows the library to avoid potential path conflicts with Quilt Loader.
 
-This mod seeks out all registered `ReflectiveConfig`-based configs, matches them to their Mod IDs, then provides them just that - no questions. 
-
-### OFF THE DEEP END, MR. SCOTT
-
-The thing is, QConf is stuffed to the nines with helpful annotations suitable for (or even designed for) a config GUI to read.
-
-Despite being internally barebones, McQoy simply reads these values and passes them right on to YACL - you'd never guess it didn't require a real mod dependency.
-
-### I AM A DOCTOR, NOT AN ENGINEER
-
-**The point of all this** is to cut down on the amount of mods that break between versions purely because of a bit of in-game config. Mods with just a few mixins often appreciate a small config, but they're forced into brittleness by larger libraries. YACL does a decent job of keeping API consistent between versions - McQoy takes it further and removes the version-specific API entirely. 
-
-Modders often overestimate the complexity needed from their configuration. booleans, strings, maps of strings and booleans, few things are complicated enough to require actual custom GUI code. So why not call in a professional?
+With the sunsetting of the quilt project, we'll be sure to migrate if the maintainers decide to give QConfig a new home/name (hi ix!)
 
 ## FASCINATING
 
 All mod projects are built on the work of many others.
 
-Thanks to [ix0rai](https://modrinth.com/user/ix0rai) and [cassian](https://github.com/cassiancc/Item-Descriptions) for helping solidify the concept for this idea, which was floating around for far too long
+Special thanks to [ix0rai](https://modrinth.com/user/ix0rai) and [cassian](https://github.com/cassiancc/Item-Descriptions) for helping solidify the concept for this idea, which was floating around for far too long.<br/>
+Also, everyone who's worked on Quilt Config - for making a genuinely great pure-java config library.
 
 
