@@ -87,43 +87,39 @@ public class MapValueOption<T> implements Option<T> {
 
 	@Override
 	public boolean changed() {
-		return !this.stateManager.isSynced();
+		return mapOption.changed();
 	}
 
 	@Override
 	public @NotNull T pendingValue() {
-		return this.stateManager.get();
+		return mapOption.pendingValue().getValue();
 	}
 
 	@Override
 	public void requestSet(@NotNull T value) {
 		Validate.notNull(value, "`value` cannot be null");
 
-		this.stateManager.set(value);
+		mapOption.requestSet(new AbstractMap.SimpleEntry<>(mapOption.pendingValue().getKey(), value));
 	}
 
 	@Override
 	public boolean applyValue() {
-		if (changed()) {
-			this.stateManager.apply();
-			return true;
-		}
-		return false;
+		return mapOption.applyValue();
 	}
 
 	@Override
 	public void forgetPendingValue() {
-		this.stateManager.sync();
+		mapOption.forgetPendingValue();
 	}
 
 	@Override
 	public void requestSetDefault() {
-		this.stateManager.resetToDefault(StateManager.ResetAction.BY_OPTION);
+		mapOption.requestSetDefault();
 	}
 
 	@Override
 	public boolean isPendingValueDefault() {
-		return this.stateManager.isDefault();
+		return mapOption.isPendingValueDefault();
 	}
 
 	@Override
