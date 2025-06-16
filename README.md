@@ -16,40 +16,41 @@ Requires <a href="https://modrinth.com/mod/yacl">YACL</a>.
 
 ### IT SEEMS I'VE MISSED YOU
 
-Some mods use [Kaleido Config](https://github.com/sisby-folk/kaleido-config) to provide a `.toml` configuration - like our own [Surveyor](https://modrinth.com/mod/surveyor), or [Crunchy Crunchy](https://modrinth.com/mod/crunchy-crunchy-advancements), or [PicoHUD](https://modrinth.com/mod/picohud).
+Some mods use [Kaleido](https://github.com/sisby-folk/kaleido-config) to provide a `.toml` configuration - like our own [Surveyor](https://modrinth.com/mod/surveyor), or [Crunchy Crunchy](https://modrinth.com/mod/crunchy-crunchy-advancements), or [PicoHUD](https://modrinth.com/mod/picohud).
 
-The `.toml` files are very nice, but you can't edit them in-game. With McQoy, you can! Just drop in the mod and you're good.
+The files look nice, but you can't edit them in-game. With McQoy, you can! Just drop the mod in and you're set.
 
 ### I DON'T NEED A DOCTOR, I AM A DOCTOR
 
-To set this up for your own mod, just follow the [Kaleido readme](https://github.com/sisby-folk/kaleido-config) - then set McQoy as a dependency on modrinth (NOT in metadata!).
+To set this up for your own mod, just follow the [Kaleido readme](https://github.com/sisby-folk/kaleido-config) - Then, set McQoy as a Modrinth dependency.
 
 <center><img alt="qconfig example" src="https://cdn.modrinth.com/data/tNmWwdI2/images/2b36d05c06cc8c9dcf11b2b22d66c607c2d80e6e.png"/></center>
-<center><i>You may find this arrangement terribly pleasant.</i></center>
+<center><i>You may find this arrangement terribly pleasant.</i></center><br/>
 
-Just ensure that your config folder _or_ filename matches your mod ID, and you're good to go. 
+Just ensure that your config folder _or_ filename matches your mod ID, so McQoy can pass that on to Mod Menu.
 
 ## IF I'M NOT CAREFUL, I'LL END UP TALKING TO MYSELF
 
-The use of McCoy is quite separated from its purpose and background, so here's that seperately:
+Ah, right - a little background:
 
 ### ALL I GOT LEFT IS MY BONES
 
-The misleadingly-named [Quilt Config](https://github.com/QuiltMC/quilt-config) isn't built on quilt, nor minecraft - It's a _pure-java_ configuration library.
+[Quilt Config](https://github.com/QuiltMC/quilt-config) is misleadingly named. It isn't built on quilt, nor minecraft - It's a _pure-java_ configuration library.
 
-This comes with a very clear benefit - it works on every loader, and every version of minecraft, with no changes required. 
+This provides a clear benefit - it works on every loader, and every version of minecraft, with no changes required. 
 
 ### I'M NOT A MAGICIAN, SPOCK
 
-Kaleido is just a wrapper for Quilt Config that shadows the library to avoid potential path conflicts with Quilt Loader.
+Kaleido is just a wrapper for Quilt Config that shadows the library to avoid path conflicts with Quilt Loader.
 
-With the sunsetting of the quilt project, we'll be sure to migrate if the maintainers decide to give QConfig a new home/name (hi ix!)
+With quilt being sunset, we'll be sure to migrate if the maintainers decide to give QConfig a new home/name (hi ix!)
 
 ## FASCINATING
 
-All mod projects are built on the work of many others.
+All mods are built on the work of many others.
 
-Special thanks to [ix0rai](https://modrinth.com/user/ix0rai) and [cassian](https://github.com/cassiancc/Item-Descriptions) for helping solidify the concept for this idea, which was floating around for far too long.<br/>
-Also, everyone who's worked on Quilt Config - for making a genuinely great pure-java config library.
+This project is based on [Quilt Config](https://github.com/QuiltMC/quilt-config) - and exists only because it's a genuinely great pure-java config library. 
+
+**Special thanks to [ix0rai](https://modrinth.com/user/ix0rai) and [cassiancc](https://github.com/cassiancc)** for providing helpful code snippets and having good ideas to begin with.
 
 
