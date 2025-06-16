@@ -2,6 +2,8 @@ package dev.sisby.mcqoy.controller;
 
 import dev.isxander.yacl3.api.Binding;
 import dev.isxander.yacl3.api.Controller;
+import dev.isxander.yacl3.api.ListOption;
+import dev.isxander.yacl3.api.ListOptionEntry;
 import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.OptionDescription;
 import dev.isxander.yacl3.api.OptionEventListener;
@@ -17,7 +19,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-public final class MapOptionEntryImpl<T> implements MapOptionEntry<T> {
+public final class MapOptionEntryImpl<T> implements ListOptionEntry<Map.Entry<String, T>> {
     private final MapOptionImpl<T> group;
     private String key;
     private T value;
@@ -25,12 +27,12 @@ public final class MapOptionEntryImpl<T> implements MapOptionEntry<T> {
     private final Binding<Map.Entry<String, T>> binding;
     private final Controller<Map.Entry<String, T>> controller;
 
-    MapOptionEntryImpl(MapOptionImpl<T> group, Map.Entry<String, T> initialValue, @NotNull Function<MapOptionEntry<T>, Controller<String>> keyController, @NotNull Function<MapOptionEntry<T>, Controller<T>> valueController) {
+    MapOptionEntryImpl(MapOptionImpl<T> group, Map.Entry<String, T> initialValue, @NotNull Function<ListOptionEntry<Map.Entry<String, T>>, Controller<Map.Entry<String, T>>> controller) {
         this.group = group;
         this.key = initialValue.getKey();
         this.value = initialValue.getValue();
         this.binding = new EntryBinding(initialValue);
-        this.controller = new EntryController<>(keyController.apply(this), valueController.apply(this), this);
+        this.controller = new EntryController<>(controller.apply(this), this);
     }
 
     @Override
@@ -74,7 +76,7 @@ public final class MapOptionEntryImpl<T> implements MapOptionEntry<T> {
     }
 
     @Override
-    public MapOption<T> parentGroup() {
+    public ListOption<Map.Entry<String, T>> parentGroup() {
         return group;
     }
 
@@ -131,20 +133,20 @@ public final class MapOptionEntryImpl<T> implements MapOptionEntry<T> {
     /**
      * Open in case mods need to find the real controller type.
      */
-    public record EntryController<T>(Controller<String> keyController, Controller<T> valueController, MapOptionEntryImpl<T> entry) implements Controller<Map.Entry<String, T>> {
-        @Override
+    public record EntryController<T>(Controller<Map.Entry<String, T>> controller, MapOptionEntryImpl<T> entry) implements Controller<Map.Entry<String, T>> {
+	    @Override
         public Option<Map.Entry<String, T>> option() {
-            return entry;
+            return controller.option();
         }
 
         @Override
         public Text formatValue() {
-            return valueController.formatValue().copy().append(keyController.formatValue());
+            return controller.formatValue();
         }
 
         @Override
         public AbstractWidget provideWidget(YACLScreen screen, Dimension<Integer> widgetDimension) {
-            return new MapEntryWidget(screen, entry, valueController.provideWidget(screen, widgetDimension), keyController.provideWidget(screen, widgetDimension));
+            return new MapEntryWidget(screen, entry, controller.provideWidget(screen, widgetDimension));
         }
     }
 

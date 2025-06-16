@@ -1,6 +1,8 @@
 package dev.sisby.mcqoy.controller;
 
 import com.google.common.collect.ImmutableList;
+import dev.isxander.yacl3.api.ListOption;
+import dev.isxander.yacl3.api.ListOptionEntry;
 import dev.isxander.yacl3.api.utils.Dimension;
 import dev.isxander.yacl3.gui.AbstractWidget;
 import dev.isxander.yacl3.gui.TooltipButtonWidget;
@@ -16,30 +18,26 @@ import java.util.List;
 
 public class MapEntryWidget extends AbstractWidget implements ParentElement {
     private final TooltipButtonWidget removeButton, moveUpButton, moveDownButton;
-    private final AbstractWidget keyWidget;
-    private final AbstractWidget valueWidget;
+    private final AbstractWidget widget;
 
-    private final MapOption<?> mapOption;
-    private final MapOptionEntry<?> mapOptionEntry;
+    private final ListOption<?> mapOption;
+    private final ListOptionEntry<?> mapOptionEntry;
 
     private final String optionNameString;
 
     private Element focused;
     private boolean dragging;
 
-    public MapEntryWidget(YACLScreen screen, MapOptionEntry<?> mapOptionEntry, AbstractWidget valueWidget, AbstractWidget keyWidget) {
-        super(valueWidget.getDimension().withHeight(Math.max(valueWidget.getDimension().height(), 20) - ((mapOptionEntry.parentGroup().indexOf(mapOptionEntry) == mapOptionEntry.parentGroup().options().size() - 1) ? 0 : 2))); // -2 to remove the padding
+    public MapEntryWidget(YACLScreen screen, ListOptionEntry<?> mapOptionEntry, AbstractWidget widget) {
+        super(widget.getDimension().withHeight(Math.max(widget.getDimension().height(), 20) - ((mapOptionEntry.parentGroup().indexOf(mapOptionEntry) == mapOptionEntry.parentGroup().options().size() - 1) ? 0 : 2))); // -2 to remove the padding
         this.mapOptionEntry = mapOptionEntry;
         this.mapOption = mapOptionEntry.parentGroup();
         this.optionNameString = mapOptionEntry.name().getString().toLowerCase();
-        this.keyWidget = keyWidget;
-        this.valueWidget = valueWidget;
+        this.widget = widget;
 
-	    Dimension<Integer> dim = valueWidget.getDimension();
+	    Dimension<Integer> dim = widget.getDimension();
         Dimension<Integer> entryDim = dim.clone().move(20 * 2, 0).expand(-20 * 3, 0);
-
-        keyWidget.setDimension(entryDim.clone().setWidth(entryDim.width() / 2));
-        valueWidget.setDimension(entryDim.clone().setWidth(entryDim.width() / 2).move(keyWidget.getDimension().width(), 0));
+	    widget.setDimension(entryDim);
 
         removeButton = new TooltipButtonWidget(screen, dim.xLimit() - 20, dim.y(), 20, 20, Text.literal("\u274c"), Text.translatable("yacl.list.remove"), btn -> {
             mapOption.removeEntry(mapOptionEntry);
@@ -74,14 +72,12 @@ public class MapEntryWidget extends AbstractWidget implements ParentElement {
         removeButton.setY(getDimension().y());
         moveUpButton.setY(getDimension().y());
         moveDownButton.setY(getDimension().y());
-        keyWidget.setDimension(keyWidget.getDimension().withY(getDimension().y()));
-        valueWidget.setDimension(valueWidget.getDimension().withY(getDimension().y()));
+	    widget.setDimension(widget.getDimension().withY(getDimension().y()));
 
         removeButton.render(graphics, mouseX, mouseY, delta);
         moveUpButton.render(graphics, mouseX, mouseY, delta);
         moveDownButton.render(graphics, mouseX, mouseY, delta);
-        keyWidget.render(graphics, mouseX, mouseY, delta);
-        valueWidget.render(graphics, mouseX, mouseY, delta);
+	    widget.render(graphics, mouseX, mouseY, delta);
     }
 
     protected void updateButtonStates() {
@@ -92,12 +88,12 @@ public class MapEntryWidget extends AbstractWidget implements ParentElement {
 
     @Override
     public void unfocus() {
-        valueWidget.unfocus();
+	    widget.unfocus();
     }
 
     @Override
     public void appendNarrations(NarrationMessageBuilder builder) {
-        valueWidget.appendNarrations(builder);
+	    widget.appendNarrations(builder);
     }
 
     @Override
@@ -107,7 +103,7 @@ public class MapEntryWidget extends AbstractWidget implements ParentElement {
 
     @Override
     public List<? extends Element> children() {
-        return ImmutableList.of(moveUpButton, moveDownButton, valueWidget, removeButton);
+        return ImmutableList.of(moveUpButton, moveDownButton, widget, removeButton);
     }
 
     @Override

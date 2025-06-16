@@ -17,7 +17,8 @@ import dev.isxander.yacl3.api.controller.LongFieldControllerBuilder;
 import dev.isxander.yacl3.api.controller.LongSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.StringControllerBuilder;
 import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
-import dev.sisby.mcqoy.controller.MapOption;
+import dev.sisby.mcqoy.controller.EntryController;
+import dev.sisby.mcqoy.controller.MapOptionImpl;
 import folk.sisby.kaleido.lib.quiltconfig.api.Config;
 import folk.sisby.kaleido.lib.quiltconfig.api.Constraint;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.Comment;
@@ -37,6 +38,7 @@ import net.minecraft.text.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -133,12 +135,14 @@ public class McQoy implements ModInitializer {
 	}
 
 	private static <T> void mapOption(TrackedValue<ValueMap<T>> field, ConfigCategory.Builder category, Text displayName, OptionDescription description, Function<Option<T>, ControllerBuilder<T>> valueController) {
-		category.group(MapOption.<T>createBuilder().name(displayName).description(description).binding(field.getDefaultValue(), field::value,
-			m -> {
+		category.group(new MapOptionImpl.BuilderImpl<T>().name(displayName).description(description).binding(
+			field.getDefaultValue().entrySet().stream().toList(),
+			() -> field.value().entrySet().stream().toList(),
+			l -> {
 				field.value().clear();
-				field.value().putAll(m);
+				l.forEach(e -> field.value().put(e.getKey(), e.getValue()));
 			}
-		).controllers(StringControllerBuilder::create, valueController).initial(field.getDefaultValue().getDefaultValue()).build());
+		).customController(o -> new EntryController<>(o, StringControllerBuilder::create, valueController)).initial(new AbstractMap.SimpleEntry<>("", field.getDefaultValue().getDefaultValue())).build());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -160,14 +164,14 @@ public class McQoy implements ModInitializer {
 
 	@SuppressWarnings("unchecked")
 	private static <T extends Enum<T>> void enumMapOption(TrackedValue<?> field, ConfigCategory.Builder category, Text displayName, OptionDescription description, ValueMap<?> defaultMap, T defaultValue) {
-		category.group(MapOption.<T>createBuilder().name(displayName).description(description).binding(
-			(ValueMap<T>) defaultMap,
-			() -> (ValueMap<T>) field.value(),
-			m -> {
+		category.group(new MapOptionImpl.BuilderImpl<T>().name(displayName).description(description).binding(
+			((TrackedValue<ValueMap<T>>) field).getDefaultValue().entrySet().stream().toList(),
+			() -> ((TrackedValue<ValueMap<T>>) field).value().entrySet().stream().toList(),
+			l -> {
 				((TrackedValue<ValueMap<T>>) field).value().clear();
-				((TrackedValue<ValueMap<T>>) field).value().putAll(m);
+				l.forEach(e -> ((TrackedValue<ValueMap<T>>) field).value().put(e.getKey(), e.getValue()));
 			}
-		).controllers(StringControllerBuilder::create, o -> EnumControllerBuilder.create(o).enumClass(defaultValue.getDeclaringClass())).initial(defaultValue).build());
+		).customController(o -> new EntryController<>(o, StringControllerBuilder::create, o2 -> EnumControllerBuilder.create(o2).enumClass(defaultValue.getDeclaringClass()))).initial(new AbstractMap.SimpleEntry<>("", ((TrackedValue<ValueMap<T>>) field).getDefaultValue().getDefaultValue())).build());
 	}
 
 	private static Function<Option<Integer>, ControllerBuilder<Integer>> intOrSliderController(Constraint.Range<?> rangeConstraint) {

@@ -8,25 +8,27 @@ import dev.isxander.yacl3.api.OptionDescription;
 import dev.isxander.yacl3.api.OptionEventListener;
 import dev.isxander.yacl3.api.OptionFlag;
 import dev.isxander.yacl3.api.StateManager;
+import dev.isxander.yacl3.api.controller.ControllerBuilder;
 import dev.isxander.yacl3.impl.ProvidesBindingForDeprecation;
 import net.minecraft.text.Text;
 import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.AbstractMap;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 public class MapValueOption<T> implements Option<T> {
-	private final MapOptionEntry<T> mapOption;
+	private final Option<Map.Entry<String, T>> mapOption;
 
 	private final Controller<T> controller;
 
 	private final StateManager<T> stateManager;
 
-	public MapValueOption(MapOptionEntry<T> mapOption, @NotNull Function<Option<T>, Controller<T>> controlGetter) {
+	public MapValueOption(Option<Map.Entry<String, T>> mapOption, @NotNull Function<Option<T>, ControllerBuilder<T>> controlGetter) {
 		this.mapOption = mapOption;
-		this.controller = controlGetter.apply(this);
+		this.controller = controlGetter.apply(this).build();
 		this.stateManager = StateManager.createSimple(
 			mapOption.binding().defaultValue().getValue(),
 			() -> mapOption.pendingValue().getValue(),
