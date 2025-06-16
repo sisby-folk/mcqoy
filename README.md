@@ -1,6 +1,6 @@
 <!--suppress HtmlDeprecatedTag, XmlDeprecatedElement -->
 <center>
-<h1>QCONF OVER YACL</h1>
+<h1>QCONF OVER YACL (MCQOY)</h1>
 </center>
 
 <center><img alt="mod preview" src="https://upload.wikimedia.org/wikipedia/commons/9/90/DeForest_Kelley%2C_Dr._McCoy%2C_Star_Trek.jpg"/></center>
@@ -11,7 +11,7 @@
 
 ---
 
-**McQoy** A minimal compatibility layer that generates YACL configuration screens for QConfig mods.
+**McQoy** is a minimal compatibility layer that generates YACL configuration screens for QConfig mods.
 
 ### ALL I GOT LEFT IS MY BONES
 
@@ -29,7 +29,7 @@ This mod seeks out all registered `ReflectiveConfig`-based configs, matches them
 
 The thing is, QConf is stuffed to the nines with helpful annotations suitable for (or even designed for) a config GUI to read.
 
-Despite being internally barebones, McQoy simply reads these values and passes them right on to YACL - you'd never guess it didn't require a real dependency mod dependency.
+Despite being internally barebones, McQoy simply reads these values and passes them right on to YACL - you'd never guess it didn't require a real mod dependency.
 
 ### I AM A DOCTOR, NOT AN ENGINEER
 
