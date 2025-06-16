@@ -17,6 +17,7 @@ import dev.isxander.yacl3.api.controller.LongFieldControllerBuilder;
 import dev.isxander.yacl3.api.controller.LongSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.StringControllerBuilder;
 import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
+import dev.sisby.mcqoy.controller.MapOption;
 import folk.sisby.kaleido.lib.quiltconfig.api.Config;
 import folk.sisby.kaleido.lib.quiltconfig.api.Constraint;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.Comment;
@@ -25,8 +26,10 @@ import folk.sisby.kaleido.lib.quiltconfig.api.annotations.DisplayNameConvention;
 import folk.sisby.kaleido.lib.quiltconfig.api.metadata.NamingSchemes;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.TrackedValue;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.ValueList;
+import folk.sisby.kaleido.lib.quiltconfig.api.values.ValueMap;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.ValueTreeNode;
 import folk.sisby.kaleido.lib.quiltconfig.impl.values.ValueListImpl;
+import folk.sisby.kaleido.lib.quiltconfig.impl.values.ValueMapImpl;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.screen.Screen;
@@ -48,7 +51,6 @@ public class McQoy implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		LOGGER.info("[McQoy] I’m beginning to think I can cure a rainy day!");
-
 	}
 
 	public static Screen createScreen(Screen parent, Config config) {
@@ -101,6 +103,18 @@ public class McQoy implements ModInitializer {
 					default -> LOGGER.warn("[McQoy] Unfamiliar with list field {} of class {} - skipping it!", field.key().getLastComponent(), list.getDefaultValue().getClass());
 				}
 			}
+			case ValueMapImpl<?> map -> {
+				switch (map.getDefaultValue()) {
+					case Boolean ignored -> mapOption((TrackedValue<ValueMap<Boolean>>) field, category, displayName, description, TickBoxControllerBuilder::create);
+					case String ignored -> mapOption((TrackedValue<ValueMap<String>>) field, category, displayName, description, StringControllerBuilder::create);
+					case Integer ignored -> mapOption((TrackedValue<ValueMap<Integer>>) field, category, displayName, description, intOrSliderController(rangeConstraint));
+					case Long ignored -> mapOption((TrackedValue<ValueMap<Long>>) field, category, displayName, description, longOrSliderController(rangeConstraint));
+					case Float ignored -> mapOption((TrackedValue<ValueMap<Float>>) field, category, displayName, description, floatOrSliderController(rangeConstraint));
+					case Double ignored -> mapOption((TrackedValue<ValueMap<Double>>) field, category, displayName, description, doubleOrSliderController(rangeConstraint));
+					case Enum def -> enumMapOption(field, category, displayName, description, map, def);
+					default -> LOGGER.warn("[McQoy] Unfamiliar with map field {} of class {} - skipping it!", field.key().getLastComponent(), map.getDefaultValue().getClass());
+				}
+			}
 			default -> LOGGER.warn("[McQoy] Unfamiliar with field {} of class {} - skipping it!", field.key().getLastComponent(), field.getDefaultValue().getClass());
 		}
 	}
@@ -110,12 +124,21 @@ public class McQoy implements ModInitializer {
 	}
 
 	private static <T> void listOption(TrackedValue<ValueList<T>> field, ConfigCategory.Builder category, Text displayName, OptionDescription description, Function<Option<T>, ControllerBuilder<T>> controller) {
-		category.group(ListOption.<T>createBuilder().name(displayName).description(description).binding((field.getDefaultValue()), field::value,
+		category.group(ListOption.<T>createBuilder().name(displayName).description(description).binding(field.getDefaultValue(), field::value,
 			l -> {
 				field.value().clear();
 				field.value().addAll(l);
 			}
 		).controller(controller).initial(field.getDefaultValue().getDefaultValue()).build());
+	}
+
+	private static <T> void mapOption(TrackedValue<ValueMap<T>> field, ConfigCategory.Builder category, Text displayName, OptionDescription description, Function<Option<T>, ControllerBuilder<T>> valueController) {
+		category.group(MapOption.<T>createBuilder().name(displayName).description(description).binding(field.getDefaultValue(), field::value,
+			m -> {
+				field.value().clear();
+				field.value().putAll(m);
+			}
+		).controller(valueController).initial(field.getDefaultValue().getDefaultValue()).build());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -131,6 +154,18 @@ public class McQoy implements ModInitializer {
 			l -> {
 				((TrackedValue<ValueList<T>>) field).value().clear();
 				((TrackedValue<ValueList<T>>) field).value().addAll(l);
+			}
+		).controller(o -> EnumControllerBuilder.create(o).enumClass(defaultValue.getDeclaringClass())).initial(defaultValue).build());
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T extends Enum<T>> void enumMapOption(TrackedValue<?> field, ConfigCategory.Builder category, Text displayName, OptionDescription description, ValueMap<?> defaultMap, T defaultValue) {
+		category.group(MapOption.<T>createBuilder().name(displayName).description(description).binding(
+			(ValueMap<T>) defaultMap,
+			() -> (ValueMap<T>) field.value(),
+			m -> {
+				((TrackedValue<ValueMap<T>>) field).value().clear();
+				((TrackedValue<ValueMap<T>>) field).value().putAll(m);
 			}
 		).controller(o -> EnumControllerBuilder.create(o).enumClass(defaultValue.getDeclaringClass())).initial(defaultValue).build());
 	}
