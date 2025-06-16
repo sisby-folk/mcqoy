@@ -33,6 +33,13 @@ public class EntryControllerElement<T> extends ControllerWidget<EntryController<
 	}
 
 	@Override
+	public void setDimension(Dimension<Integer> dim) {
+		super.setDimension(dim);
+		this.keyWidget.setDimension(dim.withWidth(dim.width() / 2));
+		this.valueWidget.setDimension(dim.withWidth(dim.width() / 2).moved(dim.width() / 2, 0));
+	}
+
+	@Override
 	protected int getHoveredControlWidth() {
 		return getUnhoveredControlWidth();
 	}
