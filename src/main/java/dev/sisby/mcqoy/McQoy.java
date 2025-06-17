@@ -18,7 +18,6 @@ import dev.isxander.yacl3.api.controller.LongSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.StringControllerBuilder;
 import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
 import dev.sisby.mcqoy.controller.EntryController;
-import dev.sisby.mcqoy.controller.MapOptionImpl;
 import folk.sisby.kaleido.lib.quiltconfig.api.Config;
 import folk.sisby.kaleido.lib.quiltconfig.api.Constraint;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.Comment;
@@ -42,6 +41,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -135,7 +135,7 @@ public class McQoy implements ModInitializer {
 	}
 
 	private static <T> void mapOption(TrackedValue<ValueMap<T>> field, ConfigCategory.Builder category, Text displayName, OptionDescription description, Function<Option<T>, ControllerBuilder<T>> valueController) {
-		category.group(new MapOptionImpl.BuilderImpl<T>().name(displayName).description(description).binding(
+		category.group(ListOption.<Map.Entry<String, T>>createBuilder().name(displayName).description(description).binding(
 			field.getDefaultValue().entrySet().stream().toList(),
 			() -> field.value().entrySet().stream().toList(),
 			l -> {
@@ -164,7 +164,7 @@ public class McQoy implements ModInitializer {
 
 	@SuppressWarnings("unchecked")
 	private static <T extends Enum<T>> void enumMapOption(TrackedValue<?> field, ConfigCategory.Builder category, Text displayName, OptionDescription description, ValueMap<?> defaultMap, T defaultValue) {
-		category.group(new MapOptionImpl.BuilderImpl<T>().name(displayName).description(description).binding(
+		category.group(ListOption.<Map.Entry<String, T>>createBuilder().name(displayName).description(description).binding(
 			((TrackedValue<ValueMap<T>>) field).getDefaultValue().entrySet().stream().toList(),
 			() -> ((TrackedValue<ValueMap<T>>) field).value().entrySet().stream().toList(),
 			l -> {

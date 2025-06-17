@@ -30,7 +30,7 @@ public class MapKeyOption<T> implements Option<String> {
 		this.mapOption = mapOption;
 		this.controller = controlGetter.apply(this).build();
 		this.stateManager = StateManager.createSimple(
-			mapOption.binding().defaultValue().getKey(),
+			mapOption.binding().getValue().getKey(),
 			() -> mapOption.pendingValue().getKey(),
 			k -> mapOption.requestSet(new AbstractMap.SimpleEntry<>(k, mapOption.pendingValue().getValue()))
 		);
