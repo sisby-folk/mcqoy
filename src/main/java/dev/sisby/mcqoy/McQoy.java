@@ -23,6 +23,8 @@ import folk.sisby.kaleido.lib.quiltconfig.api.Constraint;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.Comment;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.DisplayName;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.DisplayNameConvention;
+import folk.sisby.kaleido.lib.quiltconfig.api.metadata.MetadataContainer;
+import folk.sisby.kaleido.lib.quiltconfig.api.metadata.NamingScheme;
 import folk.sisby.kaleido.lib.quiltconfig.api.metadata.NamingSchemes;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.TrackedValue;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.ValueList;
@@ -39,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,17 +58,22 @@ public class McQoy implements ModInitializer {
 		LOGGER.info("[McQoy] I’m beginning to think I can cure a rainy day!");
 	}
 
-	public static Screen createScreen(Screen parent, Config config) {
-		final YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder().title(Text.of("Config: " + NamingSchemes.TITLE_CASE.coerce(config.family().isEmpty() ? config.id() : config.family())));
+	public static Screen createScreen(Screen parent, String modId, Collection<Config> configs) {
+		final YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder().title(Text.of("Config: " + FabricLoader.getInstance().getModContainer(modId).orElseThrow().getMetadata().getName()));
 		LinkedHashMap<String, ConfigCategory.Builder> categories = new LinkedHashMap<>();
-		for (TrackedValue<?> field : config.values()) {
-			ConfigCategory.Builder category = categories.computeIfAbsent(
-				field.key().length() == 1 ? (config.family().isEmpty() ? config.id() : config.family()) : field.key().getKeyComponent(0),
-				k -> ConfigCategory.createBuilder().name(Text.of(Objects.requireNonNullElse(config.metadata(DisplayNameConvention.TYPE), NamingSchemes.TITLE_CASE).coerce(k)))
-			);
-			Text displayName = getDisplayName(field);
-			OptionDescription description = OptionDescription.of(getComments(field).stream().map(Text::of).toArray(Text[]::new));
-			mapAndAddField(field, category, displayName, description);
+		for (Config config : configs) {
+			Text configDisplayName = getDisplayName(config, config.family().isEmpty() ? config.id() : config.family(), NamingSchemes.TITLE_CASE);
+			ConfigCategory.Builder category;
+			for (TrackedValue<?> field : config.values()) {
+				if (field.key().length() == 1) { // No Section
+					category = categories.computeIfAbsent(configDisplayName.getString(), k -> ConfigCategory.createBuilder().name(configDisplayName));
+				} else { // With section, take topmost
+					ValueTreeNode topSection = config.getNode(List.of(field.key().getKeyComponent(0)));
+					Text sectionDisplayName = getDisplayName(topSection, topSection.key().getLastComponent(), NamingSchemes.TITLE_CASE);
+					category = categories.computeIfAbsent(sectionDisplayName.getString(), k -> ConfigCategory.createBuilder().name(sectionDisplayName));
+				}
+				mapAndAddField(field, category, getDisplayName(field, field.key().getLastComponent(), NamingSchemes.SPACE_SEPARATED_LOWER_CASE_INITIAL_UPPER_CASE), OptionDescription.of(getComments(field).stream().map(Text::of).toArray(Text[]::new)));
+			}
 		}
 		for (ConfigCategory.Builder s : categories.values()) {
 			builder.category(s.build());
@@ -204,14 +212,14 @@ public class McQoy implements ModInitializer {
 			.formatValue(f -> Text.of("%.2f".formatted(f)));
 	}
 
-	public static Text getDisplayName(ValueTreeNode value) {
+	public static Text getDisplayName(MetadataContainer value, String fallback, NamingScheme fallbackScheme) {
 		if (value.hasMetadata(DisplayName.TYPE)) {
 			if (value.metadata(DisplayName.TYPE).isTranslatable()) {
 				return Text.translatable(value.metadata(DisplayName.TYPE).getName());
 			}
 			return Text.literal(value.metadata(DisplayName.TYPE).getName());
 		} else {
-			return Text.literal(Objects.requireNonNullElse(value.metadata(DisplayNameConvention.TYPE), NamingSchemes.SPACE_SEPARATED_LOWER_CASE_INITIAL_UPPER_CASE).coerce(value.key().getLastComponent()));
+			return Text.literal(Objects.requireNonNullElse(value.metadata(DisplayNameConvention.TYPE), fallbackScheme).coerce(fallback));
 		}
 	}
 

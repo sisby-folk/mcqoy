@@ -23,8 +23,7 @@ dependencies {
 	modImplementation libs.fapi
 	implementation libs.kaleido
 	modImplementation libs.yacl
-
-	modImplementation "com.terraformersmc:modmenu:11.0.3"
+	modImplementation libs.modmenu
 
 	include libs.kaleido
 }
@@ -45,7 +44,8 @@ processResources {
 		mc            : compatibleVersions.split(", ")[0],
 		fl            : libs.versions.fl.get(),
 		fapi          : libs.versions.fapi.get(),
-		yacl          : libs.versions.yacl.get(),
+		yacl          : libs.versions.yacl.get().replace("-fabric", "-"),
+		modmenu       : libs.versions.modmenu.get(),
 	]
 	inputs.properties meta
 	filesMatching("*.mod.json") { expand(meta) }
@@ -91,5 +91,6 @@ modrinth {
 	dependencies {
 		required.version "fabric-api", libs.versions.fapi.get()
 		required.version "yacl", libs.versions.yacl.get()
+		required.version "modmenu", libs.versions.modmenu.get()
 	}
 }

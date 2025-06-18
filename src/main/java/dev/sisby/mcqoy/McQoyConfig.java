@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 @DisplayNameConvention(NamingSchemes.SPACE_SEPARATED_LOWER_CASE_INITIAL_UPPER_CASE)
+@DisplayName("McQoy")
 public class McQoyConfig extends WrappedConfig {
 	@Comment("Height (in metres)")
 	@FloatRange(min = 1.0F, max = 3.0F)
@@ -49,6 +50,7 @@ public class McQoyConfig extends WrappedConfig {
 
 
 	@Comment("F-")
+	@DisplayName("#%(*&@!")
 	public Curses curses = new Curses();
 
 	public static class Curses implements Section {
