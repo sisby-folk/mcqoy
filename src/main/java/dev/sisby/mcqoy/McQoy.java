@@ -1,5 +1,7 @@
 package dev.sisby.mcqoy;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import dev.isxander.yacl3.api.ConfigCategory;
 import dev.isxander.yacl3.api.ListOption;
 import dev.isxander.yacl3.api.Option;
@@ -30,6 +32,7 @@ import folk.sisby.kaleido.lib.quiltconfig.api.values.TrackedValue;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.ValueList;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.ValueMap;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.ValueTreeNode;
+import folk.sisby.kaleido.lib.quiltconfig.impl.util.ConfigsImpl;
 import folk.sisby.kaleido.lib.quiltconfig.impl.values.ValueListImpl;
 import folk.sisby.kaleido.lib.quiltconfig.impl.values.ValueMapImpl;
 import net.fabricmc.api.ModInitializer;
@@ -42,6 +45,7 @@ import org.slf4j.LoggerFactory;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +60,23 @@ public class McQoy implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		LOGGER.info("[McQoy] I’m beginning to think I can cure a rainy day!");
+	}
+
+	public static Map<String, Function<Screen, Screen>> getScreenFactories() {
+		Multimap<String, Config> modConfigs = HashMultimap.create();
+		for (Config config : ConfigsImpl.getAll()) {
+			String modId = config.family().isEmpty() ? config.id() : config.family();
+			List.of(
+				modId,
+				modId.replace("-", ""),
+				modId.replace("_", ""),
+				modId.replace("_", "-"),
+				modId.replace("-", "_")
+			).forEach(s -> modConfigs.put(s, config));
+		}
+		Map<String, Function<Screen, Screen>> screenFactories = new HashMap<>();
+		modConfigs.asMap().forEach((id, configs) -> screenFactories.put(id, parent -> createScreen(parent, id, configs)));
+		return screenFactories;
 	}
 
 	public static Screen createScreen(Screen parent, String modId, Collection<Config> configs) {
