@@ -1,5 +1,7 @@
 package dev.sisby.mcqoy;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import dev.isxander.yacl3.api.ConfigCategory;
 import dev.isxander.yacl3.api.ListOption;
 import dev.isxander.yacl3.api.Option;
@@ -30,36 +32,67 @@ import folk.sisby.kaleido.lib.quiltconfig.api.values.TrackedValue;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.ValueList;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.ValueMap;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.ValueTreeNode;
+import folk.sisby.kaleido.lib.quiltconfig.impl.util.ConfigsImpl;
 import folk.sisby.kaleido.lib.quiltconfig.impl.values.ValueListImpl;
 import folk.sisby.kaleido.lib.quiltconfig.impl.values.ValueMapImpl;
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
+import net.minecraftforge.client.ConfigScreenHandler;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
-public class McQoy implements ModInitializer {
+@Mod("mcqoy")
+public class McQoy {
 	public static final String ID = "mcqoy";
 	public static final Logger LOGGER = LoggerFactory.getLogger(ID);
-	public static final McQoyConfig CONFIG = McQoyConfig.createToml(FabricLoader.getInstance().getConfigDir(), "", ID, McQoyConfig.class);
+	public static final McQoyConfig CONFIG = McQoyConfig.createToml(FMLPaths.CONFIGDIR.get(), "", ID, McQoyConfig.class);
 
-	@Override
-	public void onInitialize() {
+	public McQoy(FMLJavaModLoadingContext context) {
 		LOGGER.info("[McQoy] I’m beginning to think I can cure a rainy day!");
+		context.getModEventBus().addListener(this::complete);
+	}
+
+	@SubscribeEvent
+	public void complete(FMLLoadCompleteEvent event) {
+		getScreenFactories().forEach((id, factory) -> ModList.get().getModContainerById(id).ifPresent(c -> c
+			.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> new ConfigScreenHandler.ConfigScreenFactory(factory))));
+	}
+
+	public static Map<String, Function<Screen, Screen>> getScreenFactories() {
+		Multimap<String, Config> modConfigs = HashMultimap.create();
+		for (Config config : ConfigsImpl.getAll()) {
+			String modId = config.family().isEmpty() ? config.id() : config.family();
+			List.of(
+				modId,
+				modId.replace("-", ""),
+				modId.replace("_", ""),
+				modId.replace("_", "-"),
+				modId.replace("-", "_")
+			).forEach(s -> modConfigs.put(s, config));
+		}
+		Map<String, Function<Screen, Screen>> screenFactories = new HashMap<>();
+		modConfigs.asMap().forEach((id, configs) -> screenFactories.put(id, parent -> createScreen(parent, id, configs)));
+		return screenFactories;
 	}
 
 	public static Screen createScreen(Screen parent, String modId, Collection<Config> configs) {
-		final YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder().title(Text.of("Config: " + FabricLoader.getInstance().getModContainer(modId).orElseThrow().getMetadata().getName()));
+		final YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder().title(Text.of("Config: " + ModList.get().getModContainerById(modId).map(c -> c.getModInfo().getDisplayName()).orElse(modId)));
 		LinkedHashMap<String, ConfigCategory.Builder> categories = new LinkedHashMap<>();
 		for (Config config : configs) {
 			Text configDisplayName = getDisplayName(config, config.family().isEmpty() ? config.id() : config.family(), NamingSchemes.TITLE_CASE);
