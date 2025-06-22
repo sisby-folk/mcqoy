@@ -14,7 +14,7 @@ import java.util.Map;
 public class McQoyModMenu implements ModMenuApi {
 	@Override
 	public ConfigScreenFactory<?> getModConfigScreenFactory() {
-		return null;
+		return parent -> McQoy.createScreen(parent, McQoy.ID, List.of(McQoy.CONFIG));
 	}
 
 	@Override
