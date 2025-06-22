@@ -42,7 +42,6 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
-import net.minecraftforge.fml.javafmlmod.FMLModContainer;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,19 +56,19 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
-@Mod("mcqoy")
+@Mod(McQoy.ID)
+@Mod.EventBusSubscriber(modid = McQoy.ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class McQoy {
 	public static final String ID = "mcqoy";
 	public static final Logger LOGGER = LoggerFactory.getLogger(ID);
 	public static final McQoyConfig CONFIG = McQoyConfig.createToml(FMLPaths.CONFIGDIR.get(), "", ID, McQoyConfig.class);
 
-	public McQoy(FMLModContainer container) {
+	public McQoy() {
 		LOGGER.info("[McQoy] I’m beginning to think I can cure a rainy day!");
-		container.getEventBus().addListener(this::complete);
 	}
 
 	@SubscribeEvent
-	public void complete(FMLLoadCompleteEvent event) {
+	public static void complete(FMLLoadCompleteEvent event) {
 		getScreenFactories().forEach((id, factory) -> ModList.get().getModContainerById(id).ifPresent(c -> c
 			.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> new ConfigScreenHandler.ConfigScreenFactory((cl, p) -> factory.apply(p)))));
 	}
