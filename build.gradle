@@ -20,10 +20,11 @@ dependencies {
 	mappings variantOf(libs.yarn) { classifier "v2" }
 
 	modImplementation libs.fl
-	modImplementation libs.fapi
 	implementation libs.kaleido
 	modImplementation libs.yacl
 	modImplementation libs.modmenu
+
+	modRuntimeOnly libs.fapi
 
 	include libs.kaleido
 }
@@ -43,7 +44,6 @@ processResources {
 		members       : "${authors}${contributors ? ". Contributions by ${contributors}." : ""}",
 		mc            : compatibleVersions.split(", ")[0],
 		fl            : libs.versions.fl.get(),
-		fapi          : libs.versions.fapi.get(),
 		yacl          : libs.versions.yacl.get().replace("-fabric", "-"),
 		modmenu       : libs.versions.modmenu.get(),
 	]
@@ -89,7 +89,6 @@ modrinth {
 	changelog = "$System.env.CHANGELOG"
 	syncBodyFrom = "<!--DO NOT EDIT MANUALLY: synced from gh readme-->\n" + rootProject.file("README.md").text
 	dependencies {
-		required.version "fabric-api", libs.versions.fapi.get()
 		required.version "yacl", libs.versions.yacl.get()
 		required.version "modmenu", libs.versions.modmenu.get()
 	}
