@@ -1,5 +1,5 @@
 modLoader = "javafml"
-loaderVersion = "[4,)"
+loaderVersion = "[1,)"
 license = "${license}"
 issueTrackerURL = "${issues}"
 
@@ -11,5 +11,19 @@ description = '''${modDescription}'''
 authors = "${members}"
 displayURL = "${homepage}"
 logoFile = "assets/${modId}/icon.png"
+
+[["dependencies.${ modId }"]]
+modId = "neoforge"
+mandatory = true
+versionRange = "*"
+ordering = "NONE"
+side = "BOTH"
+
+[["dependencies.${ modId }"]]
+modId = "minecraft"
+mandatory = true
+versionRange = "[1.20.2,)"
+ordering = "NONE"
+side = "BOTH"
 
 

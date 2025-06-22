@@ -37,12 +37,13 @@ import folk.sisby.kaleido.lib.quiltconfig.impl.values.ValueListImpl;
 import folk.sisby.kaleido.lib.quiltconfig.impl.values.ValueMapImpl;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
-import net.minecraftforge.client.ConfigScreenHandler;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
-import net.minecraftforge.fml.loading.FMLPaths;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModList;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
+import net.neoforged.fml.loading.FMLPaths;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +58,7 @@ import java.util.Objects;
 import java.util.function.Function;
 
 @Mod(McQoy.ID)
-@Mod.EventBusSubscriber(modid = McQoy.ID, bus = Mod.EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = McQoy.ID)
 public class McQoy {
 	public static final String ID = "mcqoy";
 	public static final Logger LOGGER = LoggerFactory.getLogger(ID);
@@ -70,7 +71,7 @@ public class McQoy {
 	@SubscribeEvent
 	public static void complete(FMLLoadCompleteEvent event) {
 		getScreenFactories().forEach((id, factory) -> ModList.get().getModContainerById(id).ifPresent(c -> c
-			.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> new ConfigScreenHandler.ConfigScreenFactory((cl, p) -> factory.apply(p)))));
+			.registerExtensionPoint(IConfigScreenFactory.class, (cl, p) -> factory.apply(p))));
 	}
 
 	public static Map<String, Function<Screen, Screen>> getScreenFactories() {
