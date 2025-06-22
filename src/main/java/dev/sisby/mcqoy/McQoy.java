@@ -42,7 +42,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.javafmlmod.FMLModContainer;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,32 +63,15 @@ public class McQoy {
 	public static final Logger LOGGER = LoggerFactory.getLogger(ID);
 	public static final McQoyConfig CONFIG = McQoyConfig.createToml(FMLPaths.CONFIGDIR.get(), "", ID, McQoyConfig.class);
 
-	public McQoy(FMLJavaModLoadingContext context) {
+	public McQoy(FMLModContainer container) {
 		LOGGER.info("[McQoy] I’m beginning to think I can cure a rainy day!");
-		context.getModEventBus().addListener(this::complete);
+		container.getEventBus().addListener(this::complete);
 	}
 
 	@SubscribeEvent
 	public void complete(FMLLoadCompleteEvent event) {
 		getScreenFactories().forEach((id, factory) -> ModList.get().getModContainerById(id).ifPresent(c -> c
-			.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> new ConfigScreenHandler.ConfigScreenFactory(factory))));
-	}
-
-	public static Map<String, Function<Screen, Screen>> getScreenFactories() {
-		Multimap<String, Config> modConfigs = HashMultimap.create();
-		for (Config config : ConfigsImpl.getAll()) {
-			String modId = config.family().isEmpty() ? config.id() : config.family();
-			List.of(
-				modId,
-				modId.replace("-", ""),
-				modId.replace("_", ""),
-				modId.replace("_", "-"),
-				modId.replace("-", "_")
-			).forEach(s -> modConfigs.put(s, config));
-		}
-		Map<String, Function<Screen, Screen>> screenFactories = new HashMap<>();
-		modConfigs.asMap().forEach((id, configs) -> screenFactories.put(id, parent -> createScreen(parent, id, configs)));
-		return screenFactories;
+			.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> new ConfigScreenHandler.ConfigScreenFactory((cl, p) -> factory.apply(p)))));
 	}
 
 	public static Map<String, Function<Screen, Screen>> getScreenFactories() {
