@@ -91,6 +91,23 @@ public class McQoy {
 		return screenFactories;
 	}
 
+	public static Map<String, Function<Screen, Screen>> getScreenFactories() {
+		Multimap<String, Config> modConfigs = HashMultimap.create();
+		for (Config config : ConfigsImpl.getAll()) {
+			String modId = config.family().isEmpty() ? config.id() : config.family();
+			List.of(
+				modId,
+				modId.replace("-", ""),
+				modId.replace("_", ""),
+				modId.replace("_", "-"),
+				modId.replace("-", "_")
+			).forEach(s -> modConfigs.put(s, config));
+		}
+		Map<String, Function<Screen, Screen>> screenFactories = new HashMap<>();
+		modConfigs.asMap().forEach((id, configs) -> screenFactories.put(id, parent -> createScreen(parent, id, configs)));
+		return screenFactories;
+	}
+
 	public static Screen createScreen(Screen parent, String modId, Collection<Config> configs) {
 		final YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder().title(Text.of("Config: " + ModList.get().getModContainerById(modId).map(c -> c.getModInfo().getDisplayName()).orElse(modId)));
 		LinkedHashMap<String, ConfigCategory.Builder> categories = new LinkedHashMap<>();
