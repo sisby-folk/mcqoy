@@ -58,7 +58,7 @@ import java.util.Objects;
 import java.util.function.Function;
 
 @Mod(McQoy.ID)
-@EventBusSubscriber(modid = McQoy.ID)
+@EventBusSubscriber(modid = McQoy.ID, bus = EventBusSubscriber.Bus.MOD)
 public class McQoy {
 	public static final String ID = "mcqoy";
 	public static final Logger LOGGER = LoggerFactory.getLogger(ID);
