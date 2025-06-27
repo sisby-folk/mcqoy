@@ -1,4 +1,4 @@
-package dev.sisby.mcqoy.controller;
+package dev.sisby.mcqoy.yacl;
 
 import dev.isxander.yacl3.api.Controller;
 import dev.isxander.yacl3.api.Option;
