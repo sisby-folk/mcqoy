@@ -18,12 +18,7 @@
 	"license": "${license}",
 	"icon": "assets/${modId}/icon.png",
 	"depends": {
-		"minecraft": ">=${mc}",
-		"fabricloader": ">=${fl}",
-		"cloth-config2": ">=${cloth}"
-	},
-	"suggests": {
-		"modmenu": ">=${modmenu}"
+		"minecraft": ">=${mc}"
 	},
 	"entrypoints": {
 		"main": [
