@@ -10,6 +10,6 @@ displayName = "${modName}"
 description = '''${modDescription}'''
 authors = "${members}"
 displayURL = "${homepage}"
-logoFile = "assets/${modId}/icon.png"
+logoFile = "icon.png"
 
 
