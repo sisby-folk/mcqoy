@@ -1,4 +1,4 @@
-package dev.sisby.mcqoy.controller;
+package dev.sisby.mcqoy.yacl;
 
 import com.google.common.collect.ImmutableSet;
 import dev.isxander.yacl3.api.Binding;
@@ -19,20 +19,20 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-public class MapKeyOption<T> implements Option<String> {
+public class MapValueOption<T> implements Option<T> {
 	private final Option<Map.Entry<String, T>> mapOption;
 
-	private final Controller<String> controller;
+	private final Controller<T> controller;
 
-	private final StateManager<String> stateManager;
+	private final StateManager<T> stateManager;
 
-	public MapKeyOption(Option<Map.Entry<String, T>> mapOption, @NotNull Function<Option<String>, ControllerBuilder<String>> controlGetter) {
+	public MapValueOption(Option<Map.Entry<String, T>> mapOption, @NotNull Function<Option<T>, ControllerBuilder<T>> controlGetter) {
 		this.mapOption = mapOption;
 		this.controller = controlGetter.apply(this).build();
 		this.stateManager = StateManager.createSimple(
-			mapOption.binding().getValue().getKey(),
-			() -> mapOption.pendingValue().getKey(),
-			k -> mapOption.requestSet(new AbstractMap.SimpleEntry<>(k, mapOption.pendingValue().getValue()))
+			mapOption.binding().getValue().getValue(),
+			() -> mapOption.pendingValue().getValue(),
+			v -> mapOption.requestSet(new AbstractMap.SimpleEntry<>(mapOption.pendingValue().getKey(), v))
 		);
 	}
 
@@ -52,20 +52,20 @@ public class MapKeyOption<T> implements Option<String> {
 	}
 
 	@Override
-	public @NotNull Controller<String> controller() {
+	public @NotNull Controller<T> controller() {
 		return controller;
 	}
 
 	@Override
-	public @NotNull StateManager<String> stateManager() {
+	public @NotNull StateManager<T> stateManager() {
 		return stateManager;
 	}
 
 	@Override
 	@Deprecated
-	public @NotNull Binding<String> binding() {
+	public @NotNull Binding<T> binding() {
 		if (stateManager instanceof ProvidesBindingForDeprecation) {
-			return ((ProvidesBindingForDeprecation<String>) stateManager).getBinding();
+			return ((ProvidesBindingForDeprecation<T>) stateManager).getBinding();
 		}
 		throw new UnsupportedOperationException("Binding is not available for this option - using a new state manager which does not directly expose the binding as it may not have one.");
 	}
@@ -91,15 +91,15 @@ public class MapKeyOption<T> implements Option<String> {
 	}
 
 	@Override
-	public @NotNull String pendingValue() {
-		return mapOption.pendingValue().getKey();
+	public @NotNull T pendingValue() {
+		return mapOption.pendingValue().getValue();
 	}
 
 	@Override
-	public void requestSet(@NotNull String value) {
+	public void requestSet(@NotNull T value) {
 		Validate.notNull(value, "`value` cannot be null");
 
-		mapOption.requestSet(new AbstractMap.SimpleEntry<>(value, mapOption.pendingValue().getValue()));
+		mapOption.requestSet(new AbstractMap.SimpleEntry<>(mapOption.pendingValue().getKey(), value));
 	}
 
 	@Override
@@ -123,13 +123,14 @@ public class MapKeyOption<T> implements Option<String> {
 	}
 
 	@Override
-	public void addEventListener(OptionEventListener<String> listener) {
+	public void addEventListener(OptionEventListener<T> listener) {
 		mapOption.addEventListener((o, e) -> listener.onEvent(this, e));
 	}
 
 	@Override
 	@Deprecated
-	public void addListener(BiConsumer<Option<String>, String> changedListener) {
-		mapOption.addListener((o, e) -> changedListener.accept(this, e.getKey()));
+	public void addListener(BiConsumer<Option<T>, T> changedListener) {
+		mapOption.addListener((o, e) -> changedListener.accept(this, e.getValue()));
 	}
 }
+
