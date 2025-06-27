@@ -3,14 +3,14 @@ package dev.sisby.mcqoy;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class McQoyModMenu implements ModMenuApi {
 	@Override
 	public ConfigScreenFactory<?> getModConfigScreenFactory() {
-		return parent -> McQoy.createScreen(parent, McQoy.ID, List.of(McQoy.CONFIG));
+		return parent -> McQoy.createScreen(parent, McQoy.ID, Collections.singletonList(McQoy.CONFIG));
 	}
 
 	@Override

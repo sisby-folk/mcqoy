@@ -27,7 +27,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -50,7 +52,7 @@ public class McQoy implements ModInitializer {
 		Multimap<String, Config> modConfigs = HashMultimap.create();
 		for (Config config : ConfigsImpl.getAll()) {
 			String modId = config.family().isEmpty() ? config.id() : config.family();
-			List.of(
+			Arrays.asList(
 				modId,
 				modId.replace("-", ""),
 				modId.replace("_", ""),
@@ -64,7 +66,7 @@ public class McQoy implements ModInitializer {
 	}
 
 	public static Screen createScreen(Screen parent, String modId, Collection<Config> configs) {
-		final ConfigBuilder builder = ConfigBuilder.create().setParentScreen(parent).setTitle(Text.of("Config: " + FabricLoader.getInstance().getModContainer(modId).orElseThrow().getMetadata().getName()));
+		final ConfigBuilder builder = ConfigBuilder.create().setParentScreen(parent).setTitle(Text.of("Config: " + FabricLoader.getInstance().getModContainer(modId).get().getMetadata().getName()));
 		LinkedHashMap<String, ConfigCategory> categories = new LinkedHashMap<>();
 		for (Config config : configs) {
 			Text configDisplayName = getDisplayName(config, config.family().isEmpty() ? config.id() : config.family(), NamingSchemes.TITLE_CASE);
@@ -73,7 +75,7 @@ public class McQoy implements ModInitializer {
 				if (field.key().length() == 1) { // No Section
 					category = categories.computeIfAbsent(configDisplayName.getString(), k -> builder.getOrCreateCategory(configDisplayName));
 				} else { // With section, take topmost
-					ValueTreeNode topSection = config.getNode(List.of(field.key().getKeyComponent(0)));
+					ValueTreeNode topSection = config.getNode(Collections.singletonList(field.key().getKeyComponent(0)));
 					Text sectionDisplayName = getDisplayName(topSection, topSection.key().getLastComponent(), NamingSchemes.TITLE_CASE);
 					category = categories.computeIfAbsent(sectionDisplayName.getString(), k -> builder.getOrCreateCategory(sectionDisplayName));
 				}
@@ -110,7 +112,7 @@ public class McQoy implements ModInitializer {
 
 	private static <T, B extends AbstractFieldBuilder<T, ?, B>> B option(TrackedValue<T> field, BiFunction<Text, T, B> constructor) {
 		return constructor.apply(
-			getDisplayName(field, field.key().getLastComponent(), NamingSchemes.SPACE_SEPARATED_LOWER_CASE_INITIAL_UPPER_CASE), 
+			getDisplayName(field, field.key().getLastComponent(), NamingSchemes.SPACE_SEPARATED_LOWER_CASE_INITIAL_UPPER_CASE),
 			field.value()
 		).setTooltip(getComments(field).stream().map(Text::of).toArray(Text[]::new))
 		.setSaveConsumer(field::setValue);
@@ -120,8 +122,8 @@ public class McQoy implements ModInitializer {
 	private static <T, B extends AbstractFieldBuilder<T, ?, B>, B2 extends AbstractFieldBuilder<T, ?, B2>> void slider(ConfigCategory category, TrackedValue<T> field, BiFunction<Text, T, B> simple, Function4<Text, T, T, T, B2> slider) {
 		Constraint.Range<?> tempRangeConstraint = null;
 		for (Constraint<?> constraint : field.constraints()) {
-			if (constraint instanceof Constraint.Range<?> range) {
-				tempRangeConstraint = range;
+			if (constraint instanceof Constraint.Range<?>) {
+				tempRangeConstraint = (Constraint.Range<?>) constraint;
 				break;
 			}
 		}
@@ -135,12 +137,9 @@ public class McQoy implements ModInitializer {
 
 	public static Text getDisplayName(MetadataContainer value, String fallback, NamingScheme fallbackScheme) {
 		if (value.hasMetadata(DisplayName.TYPE)) {
-			if (value.metadata(DisplayName.TYPE).isTranslatable()) {
-				return Text.translatable(value.metadata(DisplayName.TYPE).getName());
-			}
-			return Text.literal(value.metadata(DisplayName.TYPE).getName());
+			return Text.of(value.metadata(DisplayName.TYPE).getName());
 		} else {
-			return Text.literal(Objects.requireNonNullElse(value.metadata(DisplayNameConvention.TYPE), fallbackScheme).coerce(fallback));
+			return Text.of((value.hasMetadata(DisplayNameConvention.TYPE) ? value.metadata(DisplayNameConvention.TYPE) : fallbackScheme).coerce(fallback));
 		}
 	}
 
