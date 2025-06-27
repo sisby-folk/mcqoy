@@ -16,7 +16,7 @@ public class McQoyModMenu implements ModMenuApi {
 	@Override
 	public Map<String, ConfigScreenFactory<?>> getProvidedConfigScreenFactories() {
 		Map<String, ConfigScreenFactory<?>> factories = new HashMap<>();
-		McQoy.getScreenFactories().forEach((id, factory) -> factories.put(id, (ConfigScreenFactory<?>) factory));
+		McQoy.getScreenFactories().forEach((id, factory) -> factories.put(id, factory::apply));
 		return factories;
 	}
 }
