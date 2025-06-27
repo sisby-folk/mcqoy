@@ -94,6 +94,6 @@ modrinth {
 	dependencies {
 		required.project "fabric-api"
 		required.project "cloth-config"
-		required.version "modmenu"
+		required.project "modmenu"
 	}
 }
