@@ -1,4 +1,4 @@
-package dev.sisby.mcqoy.controller;
+package dev.sisby.mcqoy.yacl;
 
 import dev.isxander.yacl3.api.utils.Dimension;
 import dev.isxander.yacl3.gui.AbstractWidget;
