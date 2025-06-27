@@ -19,10 +19,14 @@ import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.impl.builders.AbstractFieldBuilder;
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
+import net.minecraftforge.client.ConfigScreenHandler;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
+import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -37,14 +41,21 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public class McQoy implements ModInitializer {
+@Mod(McQoy.ID)
+@Mod.EventBusSubscriber(modid = McQoy.ID, bus = Mod.EventBusSubscriber.Bus.MOD)
+public class McQoy {
 	public static final String ID = "mcqoy";
 	public static final Logger LOGGER = LogManager.getLogger(McQoy.class);
-	public static final McQoyConfig CONFIG = McQoyConfig.createToml(FabricLoader.getInstance().getConfigDir(), "", ID, McQoyConfig.class);
+	public static final McQoyConfig CONFIG = McQoyConfig.createToml(FMLPaths.CONFIGDIR.get(), "", ID, McQoyConfig.class);
 
-	@Override
-	public void onInitialize() {
+	public McQoy() {
 		LOGGER.info("[McQoy] I’m beginning to think I can cure a rainy day!");
+	}
+
+	@SubscribeEvent
+	public static void complete(FMLLoadCompleteEvent event) {
+		getScreenFactories().forEach((id, factory) -> ModList.get().getModContainerById(id).ifPresent(c -> c
+			.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> new ConfigScreenHandler.ConfigScreenFactory((cl, p) -> factory.apply(p)))));
 	}
 
 	public static Map<String, Function<Screen, Screen>> getScreenFactories() {
@@ -65,7 +76,7 @@ public class McQoy implements ModInitializer {
 	}
 
 	public static Screen createScreen(Screen parent, String modId, Collection<Config> configs) {
-		final ConfigBuilder builder = ConfigBuilder.create().setParentScreen(parent).setTitle(Text.of("Config: " + FabricLoader.getInstance().getModContainer(modId).get().getMetadata().getName()));
+		final ConfigBuilder builder = ConfigBuilder.create().setParentScreen(parent).setTitle(Text.of("Config: " + ModList.get().getModContainerById(modId).map(c -> c.getModInfo().getDisplayName()).orElse(modId)));
 		LinkedHashMap<String, ConfigCategory> categories = new LinkedHashMap<>();
 		for (Config config : configs) {
 			Text configDisplayName = getDisplayName(config, config.family().isEmpty() ? config.id() : config.family(), NamingSchemes.TITLE_CASE);

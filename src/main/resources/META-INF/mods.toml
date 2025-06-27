@@ -1,0 +1,15 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "${license}"
+issueTrackerURL = "${issues}"
+
+[[mods]]
+modId = "${modId}"
+version = "${version}"
+displayName = "${modName}"
+description = '''${modDescription}'''
+authors = "${members}"
+displayURL = "${homepage}"
+logoFile = "assets/${modId}/icon.png"
+
+

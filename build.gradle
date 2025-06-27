@@ -20,12 +20,12 @@ dependencies {
 	minecraft libs.mc
 	mappings variantOf(libs.yarn) { classifier "v2" }
 
-	modImplementation libs.fl
+	forge libs.forge
+
 	implementation libs.kaleido
 	modImplementation (libs.cloth) {
 		exclude group: "net.fabricmc.fabric-api"
 	}
-	modImplementation libs.modmenu
 
 	modRuntimeOnly libs.fapi
 
@@ -46,13 +46,12 @@ processResources {
 		contributors  : contributors.split(", ").join("\",\n    \""),
 		members       : "${authors}${contributors ? ". Contributions by ${contributors}." : ""}",
 		mc            : compatibleVersions.split(", ")[0],
-		fl            : libs.versions.fl.get(),
 		cloth          : libs.versions.cloth.get(),
-		modmenu       : libs.versions.modmenu.get(),
 	]
 	inputs.properties meta
 	filesMatching("*.mod.json") { expand(meta) }
 	filesMatching("META-INF/*mods.toml") { expand(meta) }
+	filesMatching("pack.mcmeta") { expand(meta) }
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -92,8 +91,6 @@ modrinth {
 	changelog = "$System.env.CHANGELOG"
 	syncBodyFrom = "<!--DO NOT EDIT MANUALLY: synced from gh readme-->\n" + rootProject.file("README.md").text
 	dependencies {
-		required.project "fabric-api"
 		required.project "cloth-config"
-		required.project "modmenu"
 	}
 }
