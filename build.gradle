@@ -92,7 +92,8 @@ modrinth {
 	changelog = "$System.env.CHANGELOG"
 	syncBodyFrom = "<!--DO NOT EDIT MANUALLY: synced from gh readme-->\n" + rootProject.file("README.md").text
 	dependencies {
-		required.version "cloth-config", libs.versions.cloth.get()
-		required.version "modmenu", libs.versions.modmenu.get()
+		required.project "fabric-api"
+		required.project "cloth-config"
+		required.version "modmenu"
 	}
 }
