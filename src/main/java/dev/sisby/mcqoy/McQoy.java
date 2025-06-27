@@ -2,7 +2,6 @@ package dev.sisby.mcqoy;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.mojang.datafixers.util.Function4;
 import folk.sisby.kaleido.lib.quiltconfig.api.Config;
 import folk.sisby.kaleido.lib.quiltconfig.api.Constraint;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.Comment;
@@ -23,6 +22,8 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
+import net.minecraft.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -36,6 +37,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class McQoy implements ModInitializer {
 	public static final String ID = "mcqoy";
@@ -78,7 +81,7 @@ public class McQoy implements ModInitializer {
 					Text sectionDisplayName = getDisplayName(topSection, topSection.key().getLastComponent(), NamingSchemes.TITLE_CASE);
 					category = categories.computeIfAbsent(sectionDisplayName.getString(), k -> builder.getOrCreateCategory(sectionDisplayName));
 				}
-				mapAndAddField(field, category, builder.entryBuilder());
+				mapAndAddField(config, field, category, builder.entryBuilder());
 			}
 		}
 
@@ -87,7 +90,7 @@ public class McQoy implements ModInitializer {
 	}
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
-	private static void mapAndAddField(TrackedValue<?> field, ConfigCategory category, ConfigEntryBuilder builder) {
+	private static void mapAndAddField(Config config, TrackedValue<?> field, ConfigCategory category, ConfigEntryBuilder builder) {
 		Object defaultValue = field.getDefaultValue();
 		if (defaultValue instanceof Boolean) category.addEntry(option((TrackedValue<Boolean>) field, builder::startBooleanToggle).build());
 		else if (defaultValue instanceof String) category.addEntry(option((TrackedValue<String>) field, builder::startStrField).build());
@@ -98,16 +101,30 @@ public class McQoy implements ModInitializer {
 		else if (defaultValue instanceof Enum) category.addEntry(option((TrackedValue<Enum>) field, (d, e) -> builder.startEnumSelector(d, e.getDeclaringClass(), e)).build());
 		else if (defaultValue instanceof ValueListImpl<?>) {
 			ValueListImpl<?> list = (ValueListImpl<?>) defaultValue;
-			// Missing: Boolean List
 			if (list.getDefaultValue() instanceof String) category.addEntry(option((TrackedValue<List<String>>) field, builder::startStrList).build());
 			else if (list.getDefaultValue() instanceof Integer) category.addEntry(option((TrackedValue<List<Integer>>) field, builder::startIntList).build());
 			else if (list.getDefaultValue() instanceof Long) category.addEntry(option((TrackedValue<List<Long>>) field, builder::startLongList).build());
 			else if (list.getDefaultValue() instanceof Float) category.addEntry(option((TrackedValue<List<Float>>) field, builder::startFloatList).build());
 			else if (list.getDefaultValue() instanceof Double) category.addEntry(option((TrackedValue<List<Double>>) field, builder::startDoubleList).build());
-			// Missing: Enum List
-			else LOGGER.warn("[McQoy] Unfamiliar with list field {} of class {} - skipping it!", field.key().getLastComponent(), list.getDefaultValue().getClass());
-			// Missing: Maps
-		} else LOGGER.warn("[McQoy] Unfamiliar with field {} of class {} - skipping it!", field.key().getLastComponent(), field.getDefaultValue().getClass());
+			else { // Boolean List, Enum List
+				LOGGER.warn("[McQoy] Unfamiliar with list field {} of class {} - displaying placeholder.", field.key().getLastComponent(), list.getDefaultValue().getClass());
+				incompatibleOption(config, category, displayName, description);
+			}
+		} else { // Maps
+			LOGGER.warn("[McQoy] Unfamiliar with field {} of class {} - displaying placeholder.", field.key().getLastComponent(), field.getDefaultValue().getClass());
+			incompatibleOption(config, category, displayName, description);
+		}
+	}
+
+	private static void incompatibleOption(Config config, ConfigCategory.Builder category, Text displayName, Text[] description) {
+		Text[] desc = Stream.concat(
+			Arrays.stream(description),
+			Stream.of(
+				Text.of(""),
+				Text.of(String.format("Only editable via %s", (config.family().isEmpty() ? "" : (config.family() + "/")) + config.id() + ".toml")).copy().formatted(Formatting.YELLOW),
+				Text.of("Exit the game first.").copy().formatted(Formatting.RED)
+			)).toArray(Text[]::new);
+		category.option(ButtonOption.createBuilder().name(displayName).text(Text.of("Edit in file...")).description(OptionDescription.of(desc)).action((s, o) -> Util.getOperatingSystem().open(FabricLoader.getInstance().getConfigDir().toFile())).build());
 	}
 
 	private static <T, B extends AbstractFieldBuilder<T, ?, B>> B option(TrackedValue<T> field, BiFunction<Text, T, B> constructor) {
