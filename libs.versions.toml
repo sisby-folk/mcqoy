@@ -2,13 +2,13 @@
 loom = "1.10.+"
 minotaur = "2.+"
 
-mc = "1.18.2"
+mc = "1.16.5"
 fl = "0.16.10"
-yarn = "1.18.2+build.4"
-fapi = "0.67.0+1.18.2"
+yarn = "1.16.5+build.10"
+fapi = "0.42.0+1.16"
 kaleido = "0.3.3+1.3.2"
-cloth = "6.5.102"
-modmenu = "3.2.5"
+cloth = "4.17.101"
+modmenu = "1.16.23"
 
 [plugins]
 loom = { id = "fabric-loom", version.ref = "loom" }

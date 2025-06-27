@@ -25,8 +25,8 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,7 +41,7 @@ import java.util.function.Function;
 
 public class McQoy implements ModInitializer {
 	public static final String ID = "mcqoy";
-	public static final Logger LOGGER = LoggerFactory.getLogger(ID);
+	public static final Logger LOGGER = LogManager.getLogger(McQoy.class);
 	public static final McQoyConfig CONFIG = McQoyConfig.createToml(FabricLoader.getInstance().getConfigDir(), "", ID, McQoyConfig.class);
 
 	@Override

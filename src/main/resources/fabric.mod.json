@@ -20,7 +20,7 @@
 	"depends": {
 		"minecraft": ">=${mc}",
 		"fabricloader": ">=${fl}",
-		"cloth-config": ">=${cloth}"
+		"cloth-config2": ">=${cloth}"
 	},
 	"suggests": {
 		"modmenu": ">=${modmenu}"
