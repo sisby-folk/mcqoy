@@ -114,40 +114,33 @@ public class McQoy implements ModInitializer {
 			}
 		}
 		final Constraint.Range<?> rangeConstraint = tempRangeConstraint;
-		switch (field.getDefaultValue()) {
-			case Boolean ignored -> singleOption((TrackedValue<Boolean>) field, category, displayName, description, TickBoxControllerBuilder::create);
-			case String ignored -> singleOption((TrackedValue<String>) field, category, displayName, description, StringControllerBuilder::create);
-			case Integer ignored -> singleOption((TrackedValue<Integer>) field, category, displayName, description, intOrSliderController(rangeConstraint));
-			case Long ignored -> singleOption((TrackedValue<Long>) field, category, displayName, description, longOrSliderController(rangeConstraint));
-			case Float ignored -> singleOption((TrackedValue<Float>) field, category, displayName, description, floatOrSliderController(rangeConstraint));
-			case Double ignored -> singleOption((TrackedValue<Double>) field, category, displayName, description, doubleOrSliderController(rangeConstraint));
-			case Enum def -> enumOption(field, category, displayName, description, def);
-			case ValueListImpl<?> list -> {
-				switch (list.getDefaultValue()) {
-					case Boolean ignored -> listOption((TrackedValue<ValueList<Boolean>>) field, category, displayName, description, TickBoxControllerBuilder::create);
-					case String ignored -> listOption((TrackedValue<ValueList<String>>) field, category, displayName, description, StringControllerBuilder::create);
-					case Integer ignored -> listOption((TrackedValue<ValueList<Integer>>) field, category, displayName, description, intOrSliderController(rangeConstraint));
-					case Long ignored -> listOption((TrackedValue<ValueList<Long>>) field, category, displayName, description, longOrSliderController(rangeConstraint));
-					case Float ignored -> listOption((TrackedValue<ValueList<Float>>) field, category, displayName, description, floatOrSliderController(rangeConstraint));
-					case Double ignored -> listOption((TrackedValue<ValueList<Double>>) field, category, displayName, description, doubleOrSliderController(rangeConstraint));
-					case Enum def -> enumListOption(field, category, displayName, description, list, def);
-					default -> LOGGER.warn("[McQoy] Unfamiliar with list field {} of class {} - skipping it!", field.key().getLastComponent(), list.getDefaultValue().getClass());
-				}
-			}
-			case ValueMapImpl<?> map -> {
-				switch (map.getDefaultValue()) {
-					case Boolean ignored -> mapOption((TrackedValue<ValueMap<Boolean>>) field, category, displayName, description, TickBoxControllerBuilder::create);
-					case String ignored -> mapOption((TrackedValue<ValueMap<String>>) field, category, displayName, description, StringControllerBuilder::create);
-					case Integer ignored -> mapOption((TrackedValue<ValueMap<Integer>>) field, category, displayName, description, intOrSliderController(rangeConstraint));
-					case Long ignored -> mapOption((TrackedValue<ValueMap<Long>>) field, category, displayName, description, longOrSliderController(rangeConstraint));
-					case Float ignored -> mapOption((TrackedValue<ValueMap<Float>>) field, category, displayName, description, floatOrSliderController(rangeConstraint));
-					case Double ignored -> mapOption((TrackedValue<ValueMap<Double>>) field, category, displayName, description, doubleOrSliderController(rangeConstraint));
-					case Enum def -> enumMapOption(field, category, displayName, description, map, def);
-					default -> LOGGER.warn("[McQoy] Unfamiliar with map field {} of class {} - skipping it!", field.key().getLastComponent(), map.getDefaultValue().getClass());
-				}
-			}
-			default -> LOGGER.warn("[McQoy] Unfamiliar with field {} of class {} - skipping it!", field.key().getLastComponent(), field.getDefaultValue().getClass());
-		}
+		Object defaultValue = field.getDefaultValue();
+		if (Objects.requireNonNull(defaultValue) instanceof Boolean) singleOption((TrackedValue<Boolean>) field, category, displayName, description, TickBoxControllerBuilder::create);
+		else if (defaultValue instanceof String) singleOption((TrackedValue<String>) field, category, displayName, description, StringControllerBuilder::create);
+		else if (defaultValue instanceof Integer) singleOption((TrackedValue<Integer>) field, category, displayName, description, intOrSliderController(rangeConstraint));
+		else if (defaultValue instanceof Long) singleOption((TrackedValue<Long>) field, category, displayName, description, longOrSliderController(rangeConstraint));
+		else if (defaultValue instanceof Float) singleOption((TrackedValue<Float>) field, category, displayName, description, floatOrSliderController(rangeConstraint));
+		else if (defaultValue instanceof Double) singleOption((TrackedValue<Double>) field, category, displayName, description, doubleOrSliderController(rangeConstraint));
+		else if (defaultValue instanceof Enum) enumOption(field, category, displayName, description, (Enum) defaultValue);
+		else if (defaultValue instanceof ValueListImpl<?> list) {
+			if (Objects.requireNonNull(list.getDefaultValue()) instanceof Boolean) listOption((TrackedValue<ValueList<Boolean>>) field, category, displayName, description, TickBoxControllerBuilder::create);
+			else if (list.getDefaultValue() instanceof String) listOption((TrackedValue<ValueList<String>>) field, category, displayName, description, StringControllerBuilder::create);
+			else if (list.getDefaultValue() instanceof Integer) listOption((TrackedValue<ValueList<Integer>>) field, category, displayName, description, intOrSliderController(rangeConstraint));
+			else if (list.getDefaultValue() instanceof Long) listOption((TrackedValue<ValueList<Long>>) field, category, displayName, description, longOrSliderController(rangeConstraint));
+			else if (list.getDefaultValue() instanceof Float) listOption((TrackedValue<ValueList<Float>>) field, category, displayName, description, floatOrSliderController(rangeConstraint));
+			else if (list.getDefaultValue() instanceof Double) listOption((TrackedValue<ValueList<Double>>) field, category, displayName, description, doubleOrSliderController(rangeConstraint));
+			else if (list.getDefaultValue() instanceof Enum) enumListOption(field, category, displayName, description, list, (Enum) list.getDefaultValue());
+			else LOGGER.warn("[McQoy] Unfamiliar with list field {} of class {} - skipping it!", field.key().getLastComponent(), list.getDefaultValue().getClass());
+		} else if (defaultValue instanceof ValueMapImpl<?> map) {
+			if (Objects.requireNonNull(map.getDefaultValue()) instanceof Boolean) mapOption((TrackedValue<ValueMap<Boolean>>) field, category, displayName, description, TickBoxControllerBuilder::create);
+			else if (map.getDefaultValue() instanceof String) mapOption((TrackedValue<ValueMap<String>>) field, category, displayName, description, StringControllerBuilder::create);
+			else if (map.getDefaultValue() instanceof Integer) mapOption((TrackedValue<ValueMap<Integer>>) field, category, displayName, description, intOrSliderController(rangeConstraint));
+			else if (map.getDefaultValue() instanceof Long) mapOption((TrackedValue<ValueMap<Long>>) field, category, displayName, description, longOrSliderController(rangeConstraint));
+			else if (map.getDefaultValue() instanceof Float) mapOption((TrackedValue<ValueMap<Float>>) field, category, displayName, description, floatOrSliderController(rangeConstraint));
+			else if (map.getDefaultValue() instanceof Double) mapOption((TrackedValue<ValueMap<Double>>) field, category, displayName, description, doubleOrSliderController(rangeConstraint));
+			else if (map.getDefaultValue() instanceof Enum) enumMapOption(field, category, displayName, description, (Enum) map.getDefaultValue());
+			else LOGGER.warn("[McQoy] Unfamiliar with map field {} of class {} - skipping it!", field.key().getLastComponent(), map.getDefaultValue().getClass());
+		} else LOGGER.warn("[McQoy] Unfamiliar with field {} of class {} - skipping it!", field.key().getLastComponent(), field.getDefaultValue().getClass());
 	}
 
 	private static <T> void singleOption(TrackedValue<T> field, ConfigCategory.Builder category, Text displayName, OptionDescription description, Function<Option<T>, ControllerBuilder<T>> controller) {
@@ -192,7 +185,7 @@ public class McQoy implements ModInitializer {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <T extends Enum<T>> void enumMapOption(TrackedValue<?> field, ConfigCategory.Builder category, Text displayName, OptionDescription description, ValueMap<?> defaultMap, T defaultValue) {
+	private static <T extends Enum<T>> void enumMapOption(TrackedValue<?> field, ConfigCategory.Builder category, Text displayName, OptionDescription description, T defaultValue) {
 		category.group(ListOption.<Map.Entry<String, T>>createBuilder().name(displayName).description(description).binding(
 			((TrackedValue<ValueMap<T>>) field).getDefaultValue().entrySet().stream().toList(),
 			() -> ((TrackedValue<ValueMap<T>>) field).value().entrySet().stream().toList(),
