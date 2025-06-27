@@ -22,7 +22,7 @@ The files look nice, but you can't edit them in-game. With McQoy, you can! Just 
 
 ### I DON'T NEED A DOCTOR, I AM A DOCTOR
 
-To set this up for your own mod, check out [Kaleido#usage](https://github.com/sisby-folk/kaleido-config#usage) - works on any loader and version, doesn't matter, it's universal.<br/>
+To set this up for your own mod, check out [Kaleido#usage](https://github.com/sisby-folk/kaleido-config#usage) - any loader and version, doesn't matter, it's universal.<br/>
 When setting the config up, just make sure to specify your folder _or_ filename as your mod ID, so McQoy can find it.
 
 <center><img alt="qconfig example" src="https://cdn.modrinth.com/data/tNmWwdI2/images/2b36d05c06cc8c9dcf11b2b22d66c607c2d80e6e.png"/></center>
