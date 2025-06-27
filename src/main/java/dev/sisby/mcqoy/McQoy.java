@@ -2,6 +2,7 @@ package dev.sisby.mcqoy;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.mojang.datafixers.util.Function4;
 import folk.sisby.kaleido.lib.quiltconfig.api.Config;
 import folk.sisby.kaleido.lib.quiltconfig.api.Constraint;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.Comment;
@@ -17,12 +18,12 @@ import folk.sisby.kaleido.lib.quiltconfig.impl.values.ValueListImpl;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
+import me.shedaniel.clothconfig2.gui.entries.TextListEntry;
 import me.shedaniel.clothconfig2.impl.builders.AbstractFieldBuilder;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,9 +36,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class McQoy implements ModInitializer {
@@ -108,23 +109,27 @@ public class McQoy implements ModInitializer {
 			else if (list.getDefaultValue() instanceof Double) category.addEntry(option((TrackedValue<List<Double>>) field, builder::startDoubleList).build());
 			else { // Boolean List, Enum List
 				LOGGER.warn("[McQoy] Unfamiliar with list field {} of class {} - displaying placeholder.", field.key().getLastComponent(), list.getDefaultValue().getClass());
-				incompatibleOption(config, category, displayName, description);
+				incompatibleOption(config, category, field);
 			}
 		} else { // Maps
 			LOGGER.warn("[McQoy] Unfamiliar with field {} of class {} - displaying placeholder.", field.key().getLastComponent(), field.getDefaultValue().getClass());
-			incompatibleOption(config, category, displayName, description);
+			incompatibleOption(config, category, field);
 		}
 	}
 
-	private static void incompatibleOption(Config config, ConfigCategory.Builder category, Text displayName, Text[] description) {
-		Text[] desc = Stream.concat(
-			Arrays.stream(description),
-			Stream.of(
-				Text.of(""),
-				Text.of(String.format("Only editable via %s", (config.family().isEmpty() ? "" : (config.family() + "/")) + config.id() + ".toml")).copy().formatted(Formatting.YELLOW),
-				Text.of("Exit the game first.").copy().formatted(Formatting.RED)
-			)).toArray(Text[]::new);
-		category.option(ButtonOption.createBuilder().name(displayName).text(Text.of("Edit in file...")).description(OptionDescription.of(desc)).action((s, o) -> Util.getOperatingSystem().open(FabricLoader.getInstance().getConfigDir().toFile())).build());
+	private static void incompatibleOption(Config config, ConfigCategory category, TrackedValue<?> field) {
+		Text fileHint = Text.of(String.format("Only editable via %s", (config.family().isEmpty() ? "" : (config.family() + "/")) + config.id() + ".toml"));
+		Text exitHint = Text.of("Exit the game first.");
+		Text[] desc = Stream.concat(getComments(field).stream().map(Text::of), Stream.of(Text.of(""), fileHint, exitHint)).toArray(Text[]::new);
+		Text label = Text.of("[Edit in file...] " + getDisplayName(field, field.key().getLastComponent(), NamingSchemes.SPACE_SEPARATED_LOWER_CASE_INITIAL_UPPER_CASE).getString());
+		// Cloth doesn't have click actions...
+		category.addEntry(new TextListEntry(Text.of(""), label, 0xFFFFFF55, () -> Optional.of(desc)) {
+			@Override
+			public boolean mouseClicked(double mouseX, double mouseY, int button) {
+				Util.getOperatingSystem().open(FabricLoader.getInstance().getConfigDir().toFile());
+				return true;
+			}
+		});
 	}
 
 	private static <T, B extends AbstractFieldBuilder<T, ?, B>> B option(TrackedValue<T> field, BiFunction<Text, T, B> constructor) {
