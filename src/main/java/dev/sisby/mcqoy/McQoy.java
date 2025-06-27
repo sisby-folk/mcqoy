@@ -137,7 +137,7 @@ public class McQoy {
 		category.addEntry(new TextListEntry(Text.of(""), label, 0xFFFFFF55, () -> Optional.of(desc)) {
 			@Override
 			public boolean mouseClicked(double mouseX, double mouseY, int button) {
-				Util.getOperatingSystem().open(FabricLoader.getInstance().getConfigDir().toFile());
+				Util.getOperatingSystem().open(FMLPaths.CONFIGDIR.get().toFile());
 				return true;
 			}
 		});
