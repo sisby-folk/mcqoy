@@ -28,12 +28,12 @@ When setting the config up, just make sure to specify your folder _or_ filename 
 <center><img alt="qconfig example" src="https://cdn.modrinth.com/data/tNmWwdI2/images/2b36d05c06cc8c9dcf11b2b22d66c607c2d80e6e.png"/></center>
 <center><i>You may find this arrangement terribly pleasant.</i></center><br/>
 
-Then, if your mod is loaded on a McQoy-compatible version, installing McQoy will get you screens. No setup needed!<br/>
-For player convenience, you can also set McQoy as a required/optional dependency on matching Modrinth versions.
+Then, on any McQoy-compatible version, installing McQoy will add screens! No setup, and no hard dependency.<br/>
+For player visibility, you can also set McQoy as an `optional` dependency on Modrinth. (Or `required`, I'm not a cop.)
 
 ## IF I'M NOT CAREFUL, I'LL END UP TALKING TO MYSELF
 
-Ah, right - a little background and credit is due:
+Oh, right - a little background and credit is due:
 
 ### ALL I GOT LEFT IS MY BONES
 
@@ -41,13 +41,13 @@ Ah, right - a little background and credit is due:
 
 That means it works on every loader, and every version of minecraft, with no changes required.
 
-The API is designed for mods like McQoy to take advantage of - with fancy annotation-based field metadata. Thanks qconf!
+The API is even designed for mods like McQoy to utilize - with fancy annotation-based metadata. Thanks qconf!
 
 ### I'M NOT A MAGICIAN, SPOCK
 
-Kaleido is just a wrapper for Quilt Config that shadows the library to avoid path conflicts with Quilt Loader's version.
+Kaleido is just a wrapper for Quilt Config that shadows the library to avoid path conflicts with Quilt Loader.
 
-With quilt seemingly being sunset, we'll be sure to follow the maintainers if they decide to fork (hi ix!)
+With quilt seemingly being sunset, we'll be sure to follow the maintainers if they decide to fork it (hi ix!)
 
 ## FASCINATING
 
