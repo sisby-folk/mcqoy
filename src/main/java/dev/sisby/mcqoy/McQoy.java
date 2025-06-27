@@ -22,9 +22,7 @@ import me.shedaniel.clothconfig2.impl.builders.AbstractFieldBuilder;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -114,7 +112,7 @@ public class McQoy implements ModInitializer {
 
 	private static <T, B extends AbstractFieldBuilder<T, ?, B>> B option(TrackedValue<T> field, BiFunction<Text, T, B> constructor) {
 		return constructor.apply(
-			getDisplayName(field, field.key().getLastComponent(), NamingSchemes.SPACE_SEPARATED_LOWER_CASE_INITIAL_UPPER_CASE), 
+			getDisplayName(field, field.key().getLastComponent(), NamingSchemes.SPACE_SEPARATED_LOWER_CASE_INITIAL_UPPER_CASE),
 			field.value()
 		).setTooltip(getComments(field).stream().map(Text::of).toArray(Text[]::new))
 		.setSaveConsumer(field::setValue);
@@ -139,12 +137,9 @@ public class McQoy implements ModInitializer {
 
 	public static Text getDisplayName(MetadataContainer value, String fallback, NamingScheme fallbackScheme) {
 		if (value.hasMetadata(DisplayName.TYPE)) {
-			if (value.metadata(DisplayName.TYPE).isTranslatable()) {
-				return new TranslatableText(value.metadata(DisplayName.TYPE).getName());
-			}
-			return new LiteralText(value.metadata(DisplayName.TYPE).getName());
+			return Text.of(value.metadata(DisplayName.TYPE).getName());
 		} else {
-			return new LiteralText((value.hasMetadata(DisplayNameConvention.TYPE) ? value.metadata(DisplayNameConvention.TYPE) : fallbackScheme).coerce(fallback));
+			return Text.of((value.hasMetadata(DisplayNameConvention.TYPE) ? value.metadata(DisplayNameConvention.TYPE) : fallbackScheme).coerce(fallback));
 		}
 	}
 
