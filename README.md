@@ -22,7 +22,7 @@ The files look nice, but you can't edit them in-game. With McQoy, you can! Just 
 
 ### I DON'T NEED A DOCTOR, I AM A DOCTOR
 
-To set this up for your own mod, just follow the [Kaleido readme](https://github.com/sisby-folk/kaleido-config) - Then, set McQoy as a Modrinth dependency.
+To set this up for your own mod, just follow the [Kaleido readme](https://github.com/sisby-folk/kaleido-config) - Then, set McQoy as a dependency on Modrinth.
 
 <center><img alt="qconfig example" src="https://cdn.modrinth.com/data/tNmWwdI2/images/2b36d05c06cc8c9dcf11b2b22d66c607c2d80e6e.png"/></center>
 <center><i>You may find this arrangement terribly pleasant.</i></center><br/>
