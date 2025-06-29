@@ -108,7 +108,7 @@ public class McQoy implements ModInitializer {
 		LinkedHashMap<String, ConfigCategory.Builder> categories = new LinkedHashMap<>();
 		for (Config config : configs) {
 			String simpleName = config.family().isEmpty() ? config.id() : config.family();
-			Text configDisplayName = getDisplayName(config, configs.size() == 1 ? modName : simpleName, NamingSchemes.TITLE_CASE);
+			Text configDisplayName = configs.size() == 1 ? Text.of(modName) : getDisplayName(config, simpleName, NamingSchemes.TITLE_CASE);
 			ConfigCategory.Builder category;
 			for (TrackedValue<?> field : config.values()) {
 				if (field.key().length() == 1) { // No Section
