@@ -51,9 +51,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -62,6 +64,8 @@ public class McQoy implements ModInitializer {
 	public static final String ID = "mcqoy";
 	public static final Logger LOGGER = LoggerFactory.getLogger(ID);
 	public static final McQoyConfig CONFIG = McQoyConfig.createToml(FabricLoader.getInstance().getConfigDir(), "", ID, McQoyConfig.class);
+	public static final Set<String> matchedMods = new HashSet<>();
+	public static final Set<String> missingMods = new HashSet<>();
 
 	@Override
 	public void onInitialize() {
@@ -72,16 +76,29 @@ public class McQoy implements ModInitializer {
 		Multimap<String, Config> modConfigs = HashMultimap.create();
 		for (Config config : ConfigsImpl.getAll()) {
 			String modId = config.family().isEmpty() ? config.id() : config.family();
-			Arrays.asList(
+			boolean found = false;
+			for (String s : Arrays.asList(
 				modId,
 				modId.replace("-", ""),
 				modId.replace("_", ""),
 				modId.replace("_", "-"),
 				modId.replace("-", "_")
-			).forEach(s -> modConfigs.put(s, config));
+			)) {
+				if (FabricLoader.getInstance().isModLoaded(s)) {
+					if (!matchedMods.contains(s)) LOGGER.info("[McQoy] Matched config {} to \"{}\" ({})", getShortPath(config), FabricLoader.getInstance().getModContainer(s).get().getMetadata().getName(), s);
+					modConfigs.put(s, config);
+					found = true;
+					break;
+				}
+			}
+			if (!found && !missingMods.contains(modId)) {
+				missingMods.add(modId);
+				LOGGER.warn("[McQoy] Failed to match config {} to any loaded mod", getShortPath(config));
+			}
 		}
 		Map<String, Function<Screen, Screen>> screenFactories = new HashMap<>();
 		modConfigs.asMap().forEach((id, configs) -> screenFactories.put(id, parent -> createScreen(parent, id, configs)));
+		matchedMods.addAll(modConfigs.keys());
 		return screenFactories;
 	}
 
@@ -270,5 +287,9 @@ public class McQoy implements ModInitializer {
 			}
 		}
 		return outList;
+	}
+
+	public static String getShortPath(Config config) {
+		return config.family().isEmpty() ? config.id() : config.family() + "/" + config.id() + ".toml";
 	}
 }
