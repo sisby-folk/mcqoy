@@ -103,10 +103,12 @@ public class McQoy implements ModInitializer {
 	}
 
 	public static Screen createScreen(Screen parent, String modId, Collection<Config> configs) {
-		final YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder().title(Text.of("Config: " + FabricLoader.getInstance().getModContainer(modId).get().getMetadata().getName()));
+		String modName = FabricLoader.getInstance().getModContainer(modId).get().getMetadata().getName();
+		final YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder().title(Text.of("Config: " + modName));
 		LinkedHashMap<String, ConfigCategory.Builder> categories = new LinkedHashMap<>();
 		for (Config config : configs) {
-			Text configDisplayName = getDisplayName(config, config.family().isEmpty() ? config.id() : config.family(), NamingSchemes.TITLE_CASE);
+			String simpleName = config.family().isEmpty() ? config.id() : config.family();
+			Text configDisplayName = getDisplayName(config, configs.size() == 1 ? modName : simpleName, NamingSchemes.TITLE_CASE);
 			ConfigCategory.Builder category;
 			for (TrackedValue<?> field : config.values()) {
 				if (field.key().length() == 1) { // No Section
