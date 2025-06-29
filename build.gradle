@@ -89,7 +89,7 @@ modrinth {
 	changelog = "$System.env.CHANGELOG"
 	syncBodyFrom = "<!--DO NOT EDIT MANUALLY: synced from gh readme-->\n" + rootProject.file("README.md").text
 	dependencies {
-		required.version "yacl", libs.versions.yacl.get()
-		required.version "modmenu", libs.versions.modmenu.get()
+		required.project "yacl"
+		required.project "modmenu"
 	}
 }
