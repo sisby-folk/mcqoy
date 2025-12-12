@@ -115,7 +115,6 @@ tasks.register('curseforge', net.darkhax.curseforgegradle.TaskPublishCurseForge)
 	compatibleVersions.split(", ").toList().forEach { mainFile.addGameVersion(it) }
 	mainFile.addEnvironment("client")
 	mainFile.addRequirement("yacl")
-	mainFile.addRequirement("modmenu")
 	mainFile.changelog = !file("CHANGELOG.md").exists() ? "" : rootProject.file("CHANGELOG.md").text + "\n\nChangelog: https://github.com/${user}/${slug}/releases/tag/v${modVersion}+${branchName}"
 	mainFile.changelogType = "markdown"
 	mainFile.releaseType = "release"
