@@ -22,28 +22,32 @@ The files look nice, but you can't edit them in-game. With McQoy, you can! Just 
 
 ### I DON'T NEED A DOCTOR, I AM A DOCTOR
 
-To set this up for your own mod, just follow the [Kaleido readme](https://github.com/sisby-folk/kaleido-config) - Then, set McQoy as a dependency on Modrinth.
+To set this up for your own mod, check out [Kaleido#usage](https://github.com/sisby-folk/kaleido-config#usage) - any loader and version, doesn't matter, it's universal.<br/>
+When setting the config up, just make sure to specify your folder _or_ filename as your mod ID, so McQoy can find it.
 
 <center><img alt="qconfig example" src="https://cdn.modrinth.com/data/tNmWwdI2/images/2b36d05c06cc8c9dcf11b2b22d66c607c2d80e6e.png"/></center>
 <center><i>You may find this arrangement terribly pleasant.</i></center><br/>
 
-Just ensure that your config folder _or_ filename matches your mod ID, so McQoy can pass that on to Mod Menu.
+Then, on any McQoy-compatible version, installing McQoy will add screens! No setup, and no hard dependency.<br/>
+For player visibility, you can also set McQoy as an `optional` dependency on Modrinth. (Or `required`, I'm not a cop.)
 
 ## IF I'M NOT CAREFUL, I'LL END UP TALKING TO MYSELF
 
-Ah, right - a little background:
+Oh, right - a little background and credit is due:
 
 ### ALL I GOT LEFT IS MY BONES
 
-[Quilt Config](https://github.com/QuiltMC/quilt-config) is misleadingly named. It isn't built on quilt, nor minecraft - It's a _pure-java_ configuration library.
+[Quilt Config](https://github.com/QuiltMC/quilt-config) isn't built on quilt, or even minecraft - It's a _pure-java_ configuration library.
 
-This provides a clear benefit - it works on every loader, and every version of minecraft, with no changes required. 
+That means it works on every loader, and every version of minecraft, with no changes required.
+
+The API is even designed for mods like McQoy to utilize - with fancy annotation-based metadata. Thanks qconf!
 
 ### I'M NOT A MAGICIAN, SPOCK
 
 Kaleido is just a wrapper for Quilt Config that shadows the library to avoid path conflicts with Quilt Loader.
 
-With quilt being sunset, we'll be sure to migrate if the maintainers decide to give QConfig a new home/name (hi ix!)
+With quilt seemingly being sunset, we'll be sure to follow the maintainers if they decide to fork it (hi ix!)
 
 ## FASCINATING
 

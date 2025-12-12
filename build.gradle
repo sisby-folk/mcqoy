@@ -5,7 +5,9 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 plugins {
 	id "maven-publish"
 	alias libs.plugins.loom
+	alias libs.plugins.githubRelease
 	alias libs.plugins.minotaur
+	alias libs.plugins.curse
 	id "com.gradleup.shadow" version "9.0.0-beta17"
 }
 
@@ -85,6 +87,18 @@ publishing {
 	}
 }
 
+githubRelease {
+	token = "$System.env.GITHUB_TOKEN"
+	owner = project.user
+	repo = slug
+	tagName = "v${modVersion}+${branchName}"
+	targetCommitish = branchName
+	releaseAssets = remapJar
+	allowUploadToExisting = true
+	generateReleaseNotes = true
+	body = !file("CHANGELOG.md").exists() ? "" : rootProject.file("CHANGELOG.md").text
+}
+
 modrinth {
 	token = "$System.env.MODRINTH_TOKEN"
 	projectId = slug
@@ -92,9 +106,24 @@ modrinth {
 	uploadFile = remapJar
 	gameVersions = compatibleVersions.split(", ").toList()
 	loaders = compatibleLoaders.split(", ").toList()
-	changelog = "$System.env.CHANGELOG"
-	syncBodyFrom = "<!--DO NOT EDIT MANUALLY: synced from gh readme-->\n" + rootProject.file("README.md").text
+	changelog = !file("CHANGELOG.md").exists() ? "" : rootProject.file("CHANGELOG.md").text + "\n\nChangelog: https://github.com/${user}/${slug}/releases/tag/v${modVersion}+${branchName}"
+	syncBodyFrom = rootProject.file("README.md").text
 	dependencies {
 		required.project "cloth-config"
 	}
 }
+
+tasks.register('curseforge', net.darkhax.curseforgegradle.TaskPublishCurseForge) {
+	apiToken = "$System.env.CURSEFORGE_TOKEN"
+	disableVersionDetection()
+	def projectId = "1402884"
+	def mainFile = upload(projectId, remapJar)
+	compatibleLoaders.split(", ").toList().forEach { mainFile.addModLoader(it) }
+	compatibleVersions.split(", ").toList().forEach { mainFile.addGameVersion(it) }
+	mainFile.addEnvironment("client")
+	mainFile.addRequirement("cloth-config")
+	mainFile.changelog = !file("CHANGELOG.md").exists() ? "" : rootProject.file("CHANGELOG.md").text + "\n\nChangelog: https://github.com/${user}/${slug}/releases/tag/v${modVersion}+${branchName}"
+	mainFile.changelogType = "markdown"
+	mainFile.releaseType = "release"
+}
+
