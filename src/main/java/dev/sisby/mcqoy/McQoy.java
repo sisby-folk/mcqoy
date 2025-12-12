@@ -95,8 +95,8 @@ public class McQoy {
 				modId.replace("_", "-"),
 				modId.replace("-", "_")
 			)) {
-				if (FabricLoader.getInstance().isModLoaded(s)) {
-					if (!matchedMods.contains(s)) LOGGER.info("[McQoy] Matched config {} to \"{}\" ({})", getShortPath(config), FabricLoader.getInstance().getModContainer(s).get().getMetadata().getName(), s);
+				if (ModList.get().getModContainerById(modId).isPresent()) {
+					if (!matchedMods.contains(s)) LOGGER.info("[McQoy] Matched config {} to \"{}\" ({})", getShortPath(config), ModList.get().getModContainerById(modId).orElseThrow().getModInfo().getDisplayName(), s);
 					modConfigs.put(s, config);
 					found = true;
 					break;
