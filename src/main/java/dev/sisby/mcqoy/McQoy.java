@@ -55,9 +55,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -68,6 +70,8 @@ public class McQoy {
 	public static final String ID = "mcqoy";
 	public static final Logger LOGGER = LoggerFactory.getLogger(ID);
 	public static final McQoyConfig CONFIG = McQoyConfig.createToml(FMLPaths.CONFIGDIR.get(), "", ID, McQoyConfig.class);
+	public static final Set<String> matchedMods = new HashSet<>();
+	public static final Set<String> missingMods = new HashSet<>();
 
 	public McQoy() {
 		LOGGER.info("[McQoy] I’m beginning to think I can cure a rainy day!");
@@ -83,24 +87,39 @@ public class McQoy {
 		Multimap<String, Config> modConfigs = HashMultimap.create();
 		for (Config config : ConfigsImpl.getAll()) {
 			String modId = config.family().isEmpty() ? config.id() : config.family();
-			Arrays.asList(
+			boolean found = false;
+			for (String s : Arrays.asList(
 				modId,
 				modId.replace("-", ""),
 				modId.replace("_", ""),
 				modId.replace("_", "-"),
 				modId.replace("-", "_")
-			).forEach(s -> modConfigs.put(s, config));
+			)) {
+				if (FabricLoader.getInstance().isModLoaded(s)) {
+					if (!matchedMods.contains(s)) LOGGER.info("[McQoy] Matched config {} to \"{}\" ({})", getShortPath(config), FabricLoader.getInstance().getModContainer(s).get().getMetadata().getName(), s);
+					modConfigs.put(s, config);
+					found = true;
+					break;
+				}
+			}
+			if (!found && !missingMods.contains(modId)) {
+				missingMods.add(modId);
+				LOGGER.warn("[McQoy] Failed to match config {} to any loaded mod", getShortPath(config));
+			}
 		}
 		Map<String, Function<Screen, Screen>> screenFactories = new HashMap<>();
 		modConfigs.asMap().forEach((id, configs) -> screenFactories.put(id, parent -> createScreen(parent, id, configs)));
+		matchedMods.addAll(modConfigs.keys());
 		return screenFactories;
 	}
 
 	public static Screen createScreen(Screen parent, String modId, Collection<Config> configs) {
-		final YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder().title(Text.of("Config: " + ModList.get().getModContainerById(modId).map(c -> c.getModInfo().getDisplayName()).orElse(modId)));
+		String modName = ModList.get().getModContainerById(modId).map(c -> c.getModInfo().getDisplayName()).orElse(modId);
+		final YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder().title(Text.of("Config: " + modName));
 		LinkedHashMap<String, ConfigCategory.Builder> categories = new LinkedHashMap<>();
 		for (Config config : configs) {
-			Text configDisplayName = getDisplayName(config, config.family().isEmpty() ? config.id() : config.family(), NamingSchemes.TITLE_CASE);
+			String simpleName = config.family().isEmpty() ? config.id() : config.family();
+			Text configDisplayName = configs.size() == 1 ? Text.of(modName) : getDisplayName(config, simpleName, NamingSchemes.TITLE_CASE);
 			ConfigCategory.Builder category;
 			for (TrackedValue<?> field : config.values()) {
 				if (field.key().length() == 1) { // No Section
@@ -281,5 +300,9 @@ public class McQoy {
 			}
 		}
 		return outList;
+	}
+
+	public static String getShortPath(Config config) {
+		return config.family().isEmpty() ? config.id() : config.family() + "/" + config.id() + ".toml";
 	}
 }
