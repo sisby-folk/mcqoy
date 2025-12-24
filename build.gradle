@@ -85,7 +85,7 @@ githubRelease {
 	token = "$System.env.GITHUB_TOKEN"
 	owner = project.user
 	repo = slug
-	tagName = "v${modVersion}+${branchName}"
+	tagName = "v${modVersion}"
 	targetCommitish = branchName
 	releaseAssets = remapJar
 	allowUploadToExisting = true
@@ -100,7 +100,7 @@ modrinth {
 	uploadFile = remapJar
 	gameVersions = compatibleVersions.split(", ").toList()
 	loaders = compatibleLoaders.split(", ").toList()
-	changelog = !file("CHANGELOG.md").exists() ? "" : rootProject.file("CHANGELOG.md").text + "\n\nChangelog: https://github.com/${user}/${slug}/releases/tag/v${modVersion}+${branchName}"
+	changelog = !file("CHANGELOG.md").exists() ? "" : rootProject.file("CHANGELOG.md").text + "\n\nChangelog: https://github.com/${user}/${slug}/releases/tag/v${modVersion}"
 	syncBodyFrom = rootProject.file("README.md").text
 	dependencies {
 		required.project "yacl"
@@ -118,7 +118,7 @@ tasks.register('curseforge', net.darkhax.curseforgegradle.TaskPublishCurseForge)
 	mainFile.addEnvironment("client")
 	mainFile.addRequirement("yacl")
 	mainFile.addRequirement("modmenu")
-	mainFile.changelog = !file("CHANGELOG.md").exists() ? "" : rootProject.file("CHANGELOG.md").text + "\n\nChangelog: https://github.com/${user}/${slug}/releases/tag/v${modVersion}+${branchName}"
+	mainFile.changelog = !file("CHANGELOG.md").exists() ? "" : rootProject.file("CHANGELOG.md").text + "\n\nChangelog: https://github.com/${user}/${slug}/releases/tag/v${modVersion}"
 	mainFile.changelogType = "markdown"
 	mainFile.releaseType = "release"
 }
