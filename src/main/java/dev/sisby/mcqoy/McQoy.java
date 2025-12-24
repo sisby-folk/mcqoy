@@ -92,11 +92,19 @@ public class McQoy implements ModInitializer {
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	private static void mapAndAddField(Config config, TrackedValue<?> field, ConfigCategory category, ConfigEntryBuilder builder) {
+		Constraint.Range<?> tempRangeConstraint = null;
+		for (Constraint<?> constraint : field.constraints()) {
+			if (constraint instanceof Constraint.Range<?>) {
+				tempRangeConstraint = (Constraint.Range<?>) constraint;
+				break;
+			}
+		}
+		final Constraint.Range<?> rangeConstraint = tempRangeConstraint;
 		Object defaultValue = field.getDefaultValue();
 		if (defaultValue instanceof Boolean) category.addEntry(option((TrackedValue<Boolean>) field, builder::startBooleanToggle).build());
 		else if (defaultValue instanceof String) category.addEntry(option((TrackedValue<String>) field, builder::startStrField).build());
-		else if (defaultValue instanceof Integer) slider(category, (TrackedValue<Integer>) field, builder::startIntField, builder::startIntSlider);
-		else if (defaultValue instanceof Long) slider(category, (TrackedValue<Long>) field, builder::startLongField, builder::startLongSlider);
+		else if (defaultValue instanceof Integer) slider(category, (TrackedValue<Integer>) field, builder::startIntField, builder::startIntSlider, rangeConstraint);
+		else if (defaultValue instanceof Long) slider(category, (TrackedValue<Long>) field, builder::startLongField, builder::startLongSlider, rangeConstraint);
 		else if (defaultValue instanceof Float) category.addEntry(option((TrackedValue<Float>) field, builder::startFloatField).build());
 		else if (defaultValue instanceof Double) category.addEntry(option((TrackedValue<Double>) field, builder::startDoubleField).build());
 		else if (defaultValue instanceof Enum) category.addEntry(option((TrackedValue<Enum>) field, (d, e) -> builder.startEnumSelector(d, e.getDeclaringClass(), e)).build());
@@ -141,15 +149,7 @@ public class McQoy implements ModInitializer {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <T, B extends AbstractFieldBuilder<T, ?, B>, B2 extends AbstractFieldBuilder<T, ?, B2>> void slider(ConfigCategory category, TrackedValue<T> field, BiFunction<Text, T, B> simple, Function4<Text, T, T, T, B2> slider) {
-		Constraint.Range<?> tempRangeConstraint = null;
-		for (Constraint<?> constraint : field.constraints()) {
-			if (constraint instanceof Constraint.Range<?>) {
-				tempRangeConstraint = (Constraint.Range<?>) constraint;
-				break;
-			}
-		}
-		final Constraint.Range<?> rangeConstraint = tempRangeConstraint;
+	private static <T, B extends AbstractFieldBuilder<T, ?, B>, B2 extends AbstractFieldBuilder<T, ?, B2>> void slider(ConfigCategory category, TrackedValue<T> field, BiFunction<Text, T, B> simple, Function4<Text, T, T, T, B2> slider, Constraint.Range<?> rangeConstraint) {
 		if (rangeConstraint == null) {
 			category.addEntry(option(field, simple).build());
 		} else {
