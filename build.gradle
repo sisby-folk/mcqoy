@@ -120,3 +120,9 @@ tasks.register('curseforge', net.darkhax.curseforgegradle.TaskPublishCurseForge)
 	mainFile.releaseType = "release"
 }
 
+tasks.register("fullRelease") {
+	group "publishing"
+	dependsOn "githubRelease"
+	dependsOn "modrinth"
+	dependsOn "curseforge"
+}
