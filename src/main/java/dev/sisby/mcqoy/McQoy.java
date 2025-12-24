@@ -8,6 +8,7 @@ import dev.isxander.yacl3.api.ListOption;
 import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.OptionDescription;
 import dev.isxander.yacl3.api.YetAnotherConfigLib;
+import dev.isxander.yacl3.api.controller.ColorControllerBuilder;
 import dev.isxander.yacl3.api.controller.ControllerBuilder;
 import dev.isxander.yacl3.api.controller.DoubleFieldControllerBuilder;
 import dev.isxander.yacl3.api.controller.DoubleSliderControllerBuilder;
@@ -42,9 +43,11 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -66,6 +69,20 @@ public class McQoy implements ModInitializer {
 	public static final McQoyConfig CONFIG = McQoyConfig.createToml(FabricLoader.getInstance().getConfigDir(), "", ID, McQoyConfig.class);
 	public static final Set<String> matchedMods = new HashSet<>();
 	public static final Set<String> missingMods = new HashSet<>();
+
+	public static final List<String> RGB_CONSTRAINTS = List.of(
+		"matches r'#[0-9a-fA-F]{6}'",
+		"matches r'#[0-9A-Fa-f]{6}'",
+		"matches r'#[a-fA-F0-9]{6}'",
+		"matches r'#[A-Fa-f0-9]{6}'"
+	);
+
+	public static final List<String> ARGB_CONSTRAINTS = List.of(
+		"matches r'#[0-9a-fA-F]{8}'",
+		"matches r'#[0-9A-Fa-f]{8}'",
+		"matches r'#[a-fA-F0-9]{8}'",
+		"matches r'#[A-Fa-f0-9]{8}'"
+	);
 
 	@Override
 	public void onInitialize() {
@@ -132,29 +149,36 @@ public class McQoy implements ModInitializer {
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	private static void mapAndAddField(Config config, TrackedValue<?> field, ConfigCategory.Builder category, Text displayName, Text[] description) {
 		Constraint.Range<?> tempRangeConstraint = null;
+		boolean color = false;
+		boolean tempAlpha = false;
 		for (Constraint<?> constraint : field.constraints()) {
-			if (constraint instanceof Constraint.Range<?>) {
-				tempRangeConstraint = (Constraint.Range<?>) constraint;
-				break;
+			if (constraint instanceof Constraint.Range<?>) tempRangeConstraint = (Constraint.Range<?>) constraint;
+			if (RGB_CONSTRAINTS.stream().anyMatch(s -> constraint.getRepresentation().contains(s))) color = true;
+			if (ARGB_CONSTRAINTS.stream().anyMatch(s -> constraint.getRepresentation().contains(s))) {
+				color = true;
+				tempAlpha = true;
 			}
 		}
+		final boolean alpha = tempAlpha;
 		final Constraint.Range<?> rangeConstraint = tempRangeConstraint;
 		Object defaultValue = field.getDefaultValue();
-		if (defaultValue instanceof Boolean) singleOption((TrackedValue<Boolean>) field, category, displayName, description, TickBoxControllerBuilder::create);
-		else if (defaultValue instanceof String) singleOption((TrackedValue<String>) field, category, displayName, description, StringControllerBuilder::create);
-		else if (defaultValue instanceof Integer) singleOption((TrackedValue<Integer>) field, category, displayName, description, intOrSliderController(rangeConstraint));
-		else if (defaultValue instanceof Long) singleOption((TrackedValue<Long>) field, category, displayName, description, longOrSliderController(rangeConstraint));
-		else if (defaultValue instanceof Float) singleOption((TrackedValue<Float>) field, category, displayName, description, floatOrSliderController(rangeConstraint));
-		else if (defaultValue instanceof Double) singleOption((TrackedValue<Double>) field, category, displayName, description, doubleOrSliderController(rangeConstraint));
+		if (defaultValue instanceof Boolean) singleOption((TrackedValue<Boolean>) field, category, displayName, description, TickBoxControllerBuilder::create, t -> t, t -> t);
+		else if (defaultValue instanceof String && color) singleOption((TrackedValue<String>) field, category, displayName, description, opt -> ColorControllerBuilder.create(opt).allowAlpha(alpha), (Function<String, Color>) s -> colorOrWhite(s, alpha), c -> colorToString(c, alpha));
+		else if (defaultValue instanceof String) singleOption((TrackedValue<String>) field, category, displayName, description, StringControllerBuilder::create, t -> t, t -> t);
+		else if (defaultValue instanceof Integer) singleOption((TrackedValue<Integer>) field, category, displayName, description, intOrSliderController(rangeConstraint), t -> t, t -> t);
+		else if (defaultValue instanceof Long) singleOption((TrackedValue<Long>) field, category, displayName, description, longOrSliderController(rangeConstraint), t -> t, t -> t);
+		else if (defaultValue instanceof Float) singleOption((TrackedValue<Float>) field, category, displayName, description, floatOrSliderController(rangeConstraint), t -> t, t -> t);
+		else if (defaultValue instanceof Double) singleOption((TrackedValue<Double>) field, category, displayName, description, doubleOrSliderController(rangeConstraint), t -> t, t -> t);
 		else if (defaultValue instanceof Enum) enumOption(field, category, displayName, description, (Enum) defaultValue);
 		else if (defaultValue instanceof ValueListImpl<?>) {
 			ValueListImpl<?> list = (ValueListImpl<?>) defaultValue;
-			if (list.getDefaultValue() instanceof Boolean) listOption((TrackedValue<ValueList<Boolean>>) field, category, displayName, description, TickBoxControllerBuilder::create);
-			else if (list.getDefaultValue() instanceof String) listOption((TrackedValue<ValueList<String>>) field, category, displayName, description, StringControllerBuilder::create);
-			else if (list.getDefaultValue() instanceof Integer) listOption((TrackedValue<ValueList<Integer>>) field, category, displayName, description, intOrSliderController(rangeConstraint));
-			else if (list.getDefaultValue() instanceof Long) listOption((TrackedValue<ValueList<Long>>) field, category, displayName, description, longOrSliderController(rangeConstraint));
-			else if (list.getDefaultValue() instanceof Float) listOption((TrackedValue<ValueList<Float>>) field, category, displayName, description, floatOrSliderController(rangeConstraint));
-			else if (list.getDefaultValue() instanceof Double) listOption((TrackedValue<ValueList<Double>>) field, category, displayName, description, doubleOrSliderController(rangeConstraint));
+			if (list.getDefaultValue() instanceof Boolean) listOption((TrackedValue<ValueList<Boolean>>) field, category, displayName, description, TickBoxControllerBuilder::create, t -> t, t -> t);
+			else if (list.getDefaultValue() instanceof String && color) listOption((TrackedValue<ValueList<String>>) field, category, displayName, description, opt -> ColorControllerBuilder.create(opt).allowAlpha(alpha), (Function<String, Color>) s -> colorOrWhite(s, alpha), c -> colorToString(c, alpha));
+			else if (list.getDefaultValue() instanceof String) listOption((TrackedValue<ValueList<String>>) field, category, displayName, description, StringControllerBuilder::create, t -> t, t -> t);
+			else if (list.getDefaultValue() instanceof Integer) listOption((TrackedValue<ValueList<Integer>>) field, category, displayName, description, intOrSliderController(rangeConstraint), t -> t, t -> t);
+			else if (list.getDefaultValue() instanceof Long) listOption((TrackedValue<ValueList<Long>>) field, category, displayName, description, longOrSliderController(rangeConstraint), t -> t, t -> t);
+			else if (list.getDefaultValue() instanceof Float) listOption((TrackedValue<ValueList<Float>>) field, category, displayName, description, floatOrSliderController(rangeConstraint), t -> t, t -> t);
+			else if (list.getDefaultValue() instanceof Double) listOption((TrackedValue<ValueList<Double>>) field, category, displayName, description, doubleOrSliderController(rangeConstraint), t -> t, t -> t);
 			else if (list.getDefaultValue() instanceof Enum) enumListOption(field, category, displayName, description, list, (Enum) list.getDefaultValue());
 			else {
 				LOGGER.warn("[McQoy] Unfamiliar with list field {} of class {} - displaying placeholder.", field.key().getLastComponent(), list.getDefaultValue().getClass());
@@ -162,12 +186,13 @@ public class McQoy implements ModInitializer {
 			}
 		} else if (defaultValue instanceof ValueMapImpl<?>) {
 			ValueMapImpl<?> map = (ValueMapImpl<?>) defaultValue;
-			if (map.getDefaultValue() instanceof Boolean) mapOption((TrackedValue<ValueMap<Boolean>>) field, category, displayName, description, TickBoxControllerBuilder::create);
-			else if (map.getDefaultValue() instanceof String) mapOption((TrackedValue<ValueMap<String>>) field, category, displayName, description, StringControllerBuilder::create);
-			else if (map.getDefaultValue() instanceof Integer) mapOption((TrackedValue<ValueMap<Integer>>) field, category, displayName, description, intOrSliderController(rangeConstraint));
-			else if (map.getDefaultValue() instanceof Long) mapOption((TrackedValue<ValueMap<Long>>) field, category, displayName, description, longOrSliderController(rangeConstraint));
-			else if (map.getDefaultValue() instanceof Float) mapOption((TrackedValue<ValueMap<Float>>) field, category, displayName, description, floatOrSliderController(rangeConstraint));
-			else if (map.getDefaultValue() instanceof Double) mapOption((TrackedValue<ValueMap<Double>>) field, category, displayName, description, doubleOrSliderController(rangeConstraint));
+			if (map.getDefaultValue() instanceof Boolean) mapOption((TrackedValue<ValueMap<Boolean>>) field, category, displayName, description, TickBoxControllerBuilder::create, t -> t, t -> t);
+			else if (map.getDefaultValue() instanceof String && color) mapOption((TrackedValue<ValueMap<String>>) field, category, displayName, description, opt -> ColorControllerBuilder.create(opt).allowAlpha(alpha), (Function<String, Color>) s -> colorOrWhite(s, alpha), c -> colorToString(c, alpha));
+			else if (map.getDefaultValue() instanceof String) mapOption((TrackedValue<ValueMap<String>>) field, category, displayName, description, StringControllerBuilder::create, t -> t, t -> t);
+			else if (map.getDefaultValue() instanceof Integer) mapOption((TrackedValue<ValueMap<Integer>>) field, category, displayName, description, intOrSliderController(rangeConstraint), t -> t, t -> t);
+			else if (map.getDefaultValue() instanceof Long) mapOption((TrackedValue<ValueMap<Long>>) field, category, displayName, description, longOrSliderController(rangeConstraint), t -> t, t -> t);
+			else if (map.getDefaultValue() instanceof Float) mapOption((TrackedValue<ValueMap<Float>>) field, category, displayName, description, floatOrSliderController(rangeConstraint), t -> t, t -> t);
+			else if (map.getDefaultValue() instanceof Double) mapOption((TrackedValue<ValueMap<Double>>) field, category, displayName, description, doubleOrSliderController(rangeConstraint), t -> t, t -> t);
 			else if (map.getDefaultValue() instanceof Enum) enumMapOption(field, category, displayName, description, (Enum) map.getDefaultValue());
 			else {
 				LOGGER.warn("[McQoy] Unfamiliar with map field {} of class {} - displaying placeholder.", field.key().getLastComponent(), map.getDefaultValue().getClass());
@@ -190,28 +215,44 @@ public class McQoy implements ModInitializer {
 		category.option(ButtonOption.createBuilder().name(displayName).text(Text.of("Edit in file...")).description(OptionDescription.of(desc)).action((s, o) -> Util.getOperatingSystem().open(FabricLoader.getInstance().getConfigDir().toFile())).build());
 	}
 
-	private static <T> void singleOption(TrackedValue<T> field, ConfigCategory.Builder category, Text displayName, Text[] description, Function<Option<T>, ControllerBuilder<T>> controller) {
-		category.option(Option.<T>createBuilder().name(displayName).description(OptionDescription.of(description)).binding(field.getDefaultValue(), field::value, field::setValue).controller(controller).build());
+	private static Color colorOrWhite(String string, boolean alpha) {
+		try {
+			return new Color(Integer.parseUnsignedInt(string.replace("#", ""), 16), alpha);
+		} catch (NumberFormatException e) {
+			return Color.WHITE;
+		}
 	}
 
-	private static <T> void listOption(TrackedValue<ValueList<T>> field, ConfigCategory.Builder category, Text displayName, Text[] description, Function<Option<T>, ControllerBuilder<T>> controller) {
-		category.group(ListOption.<T>createBuilder().name(displayName).description(OptionDescription.of(description)).binding(field.getDefaultValue(), field::value,
-			l -> {
-				field.value().clear();
-				field.value().addAll(l);
-			}
-		).controller(controller).initial(field.getDefaultValue().getDefaultValue()).build());
+	private static String colorToString(Color color, boolean alpha) {
+		return "#" + StringUtils.leftPad(Integer.toHexString(color.getRGB() & (alpha ? 0xFF_FFFFFF : 0x00_FFFFFF)), alpha ? 8 : 6, "0");
 	}
 
-	private static <T> void mapOption(TrackedValue<ValueMap<T>> field, ConfigCategory.Builder category, Text displayName, Text[] description, Function<Option<T>, ControllerBuilder<T>> valueController) {
-		category.group(ListOption.<Map.Entry<String, T>>createBuilder().name(displayName).description(OptionDescription.of(description)).binding(
-			field.getDefaultValue().entrySet().stream().collect(Collectors.toList()),
-			() -> field.value().entrySet().stream().collect(Collectors.toList()),
+	private static <T, C> void singleOption(TrackedValue<T> field, ConfigCategory.Builder category, Text displayName, Text[] description, Function<Option<C>, ControllerBuilder<C>> controller, Function<T, C> getBinder, Function<C, T> setBinder) {
+		category.option(Option.<C>createBuilder().name(displayName).description(OptionDescription.of(description)).binding(getBinder.apply(field.getDefaultValue()), () -> getBinder.apply(field.value()), v -> {
+			if (field.checkForFailingConstraints(setBinder.apply(v)).isEmpty()) field.setValue(setBinder.apply(v));
+		}).controller(controller).build());
+	}
+
+	private static <T, C> void listOption(TrackedValue<ValueList<T>> field, ConfigCategory.Builder category, Text displayName, Text[] description, Function<Option<C>, ControllerBuilder<C>> controller, Function<T, C> getBinder, Function<C, T> setBinder) {
+		category.group(ListOption.<C>createBuilder().name(displayName).description(OptionDescription.of(description)).binding(field.getDefaultValue().stream().map(getBinder).collect(Collectors.toList()), () -> field.value().stream().map(getBinder).collect(Collectors.toList()),
 			l -> {
+				if (field.checkForFailingConstraints(new ValueListImpl<T>(field.value().getDefaultValue(), l.stream().map(setBinder).collect(Collectors.toList()))).isPresent()) return;
 				field.value().clear();
-				l.forEach(e -> field.value().put(e.getKey(), e.getValue()));
+				field.value().addAll(l.stream().map(setBinder).collect(Collectors.toList()));
 			}
-		).customController(o -> new EntryController<>(o, StringControllerBuilder::create, valueController)).initial(new AbstractMap.SimpleEntry<>("", field.getDefaultValue().getDefaultValue())).build());
+		).controller(controller).initial(getBinder.apply(field.getDefaultValue().getDefaultValue())).build());
+	}
+
+	private static <T, C> void mapOption(TrackedValue<ValueMap<T>> field, ConfigCategory.Builder category, Text displayName, Text[] description, Function<Option<C>, ControllerBuilder<C>> valueController, Function<T, C> getBinder, Function<C, T> setBinder) {
+		category.group(ListOption.<Map.Entry<String, C>>createBuilder().name(displayName).description(OptionDescription.of(description)).binding(
+			field.getDefaultValue().entrySet().stream().map(e -> Map.entry(e.getKey(), getBinder.apply(e.getValue()))).collect(Collectors.toList()),
+			() -> field.value().entrySet().stream().map(e -> Map.entry(e.getKey(), getBinder.apply(e.getValue()))).collect(Collectors.toList()),
+			l -> {
+				if (field.checkForFailingConstraints(new ValueMapImpl<>(field.value().getDefaultValue(), l.stream().map(e -> Map.entry(e.getKey(), setBinder.apply(e.getValue()))).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))).isPresent()) return;
+				field.value().clear();
+				l.forEach(e -> field.value().put(e.getKey(), setBinder.apply(e.getValue())));
+			}
+		).customController(o -> new EntryController<>(o, StringControllerBuilder::create, valueController)).initial(new AbstractMap.SimpleEntry<>("", getBinder.apply(field.getDefaultValue().getDefaultValue()))).build());
 	}
 
 	@SuppressWarnings("unchecked")

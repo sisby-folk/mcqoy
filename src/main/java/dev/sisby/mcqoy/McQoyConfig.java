@@ -6,6 +6,7 @@ import folk.sisby.kaleido.lib.quiltconfig.api.annotations.DisplayName;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.DisplayNameConvention;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.FloatRange;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.IntegerRange;
+import folk.sisby.kaleido.lib.quiltconfig.api.annotations.Matches;
 import folk.sisby.kaleido.lib.quiltconfig.api.metadata.NamingSchemes;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.ValueList;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.ValueMap;
@@ -28,6 +29,27 @@ public class McQoyConfig extends WrappedConfig {
 	@Comment("And in all of that, and perhaps more, only one of each of us.")
 	@Comment("Don't destroy the one named Kirk.")
 	public long galaxiesLikeThis = 3000000000000L;
+
+	public Uniform uniform = new Uniform();
+
+	public static class Uniform implements Section {
+		@Comment("Damned blinking lights.")
+		@Matches("#[0-9A-Fa-f]{8}")
+		public String communicator = "#AAF75866";
+
+		@Comment("Hands off, I got that one at the academy!")
+		@Matches("#[0-9A-Fa-f]{6}")
+		public List<String> closet = ValueList.create("", "#003366", "#ffffff", "#4B9ECF");
+
+		@Comment("Circa '2265")
+		@Matches("#[0-9A-Fa-f]{6}")
+		public Map<String, String> divisionUniforms = ValueMap.builder("")
+			.put("Command", "#CAA354")
+			.put("Operations", "#B20000")
+			.put("Sciences", "#003366")
+			.put("Medical", "#4B9ECF")
+			.build();
+	}
 
 	@Comment("\"Damn it, man!\"")
 	public Map<String, Boolean> professions = ValueMap.builder(false)
