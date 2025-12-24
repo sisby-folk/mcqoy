@@ -59,9 +59,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -72,6 +74,8 @@ public class McQoy {
 	public static final String ID = "mcqoy";
 	public static final Logger LOGGER = LoggerFactory.getLogger(ID);
 	public static final McQoyConfig CONFIG = McQoyConfig.createToml(FMLPaths.CONFIGDIR.get(), "", ID, McQoyConfig.class);
+	public static final Set<String> matchedMods = new HashSet<>();
+	public static final Set<String> missingMods = new HashSet<>();
 
 	public static final List<String> RGB_CONSTRAINTS = List.of(
 		"matches r'#[0-9a-fA-F]{6}'",
@@ -101,7 +105,8 @@ public class McQoy {
 		Multimap<String, Config> modConfigs = HashMultimap.create();
 		for (Config config : ConfigsImpl.getAll()) {
 			String modId = config.family().isEmpty() ? config.id() : config.family();
-			Arrays.asList(
+			boolean found = false;
+			for (String s : Arrays.asList(
 				modId,
 				modId.replace("-", ""),
 				modId.replace("_", ""),
@@ -335,5 +340,9 @@ public class McQoy {
 			}
 		}
 		return outList;
+	}
+
+	public static String getShortPath(Config config) {
+		return config.family().isEmpty() ? config.id() : config.family() + "/" + config.id() + ".toml";
 	}
 }
