@@ -7,12 +7,12 @@
 
 <center>
 <i>He's dead, Jim.</i><br/>
-Requires <a href="https://modrinth.com/mod/yacl">YACL</a>.
+For servers, use  <a href="https://modrinth.com/mod/qomc">QoMC</a>. 
 </center>
 
 ---
 
-**McQoy** is a simple mod that automatically generates YACL configuration screens for mods using Kaleido.
+**McQoy** is a simple mod that automatically generates YACL (or Cloth) configuration screens for mods using Kaleido.
 
 ### IT SEEMS I'VE MISSED YOU
 
