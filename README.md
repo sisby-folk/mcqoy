@@ -16,7 +16,7 @@ Requires <a href="https://modrinth.com/mod/yacl">YACL</a>.
 
 ### IT SEEMS I'VE MISSED YOU
 
-Some mods use [Kaleido](https://github.com/sisby-folk/kaleido-config) to provide a `.toml` configuration - like our own [Surveyor](https://modrinth.com/mod/surveyor), or [Crunchy Crunchy](https://modrinth.com/mod/crunchy-crunchy-advancements), or [PicoHUD](https://modrinth.com/mod/picohud).
+[Some mods](https://modrinth.com/collection/zZVgWFum) use [Kaleido](https://github.com/sisby-folk/kaleido-config) to provide a `.toml` configuration - like our own [Surveyor](https://modrinth.com/mod/surveyor), or [Crunchy Crunchy](https://modrinth.com/mod/crunchy-crunchy-advancements), or [PicoHUD](https://modrinth.com/mod/picohud).
 
 The files look nice, but you can't edit them in-game. With McQoy, you can! Just drop the mod in and you're set.
 
