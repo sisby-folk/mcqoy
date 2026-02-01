@@ -1,2 +1,6 @@
 {
+	"gui.mcqoy.header": "Config: %s",
+	"gui.mcqoy.onlyEditableVia": "Only editable via %s",
+	"gui.mcqoy.exitGameFirst": "Exit the game first.",
+	"gui.mcqoy.editInFile": "Edit in file..."
 }

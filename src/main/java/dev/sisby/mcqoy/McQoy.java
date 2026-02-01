@@ -121,7 +121,7 @@ public class McQoy implements ModInitializer {
 
 	public static Screen createScreen(Screen parent, String modId, Collection<Config> configs) {
 		String modName = FabricLoader.getInstance().getModContainer(modId).get().getMetadata().getName();
-		final YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder().title(Text.of("Config: " + modName));
+		final YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder().title(Text.translatable("gui.mcqoy.header", modName));
 		LinkedHashMap<String, ConfigCategory.Builder> categories = new LinkedHashMap<>();
 		for (Config config : configs) {
 			String simpleName = config.family().isEmpty() ? config.id() : config.family();
@@ -209,10 +209,10 @@ public class McQoy implements ModInitializer {
 			Arrays.stream(description),
 			Stream.of(
 				Text.of(""),
-				Text.of(String.format("Only editable via %s", (config.family().isEmpty() ? "" : (config.family() + "/")) + config.id() + ".toml")).copy().formatted(Formatting.YELLOW),
-				Text.of("Exit the game first.").copy().formatted(Formatting.RED)
-			)).toArray(Text[]::new);
-		category.option(ButtonOption.createBuilder().name(displayName).text(Text.of("Edit in file...")).description(OptionDescription.of(desc)).action((s, o) -> Util.getOperatingSystem().open(FabricLoader.getInstance().getConfigDir().toFile())).build());
+				Text.translatable("gui.mcqoy.onlyEditableVia", config.family().isEmpty() ? "" : (config.family() + "/") + config.id() + ".toml").copy().formatted(Formatting.YELLOW),
+				Text.translatable("gui.mcqoy.exitGameFirst").copy().formatted(Formatting.RED))
+			).toArray(Text[]::new);
+		category.option(ButtonOption.createBuilder().name(displayName).text(Text.translatable("gui.mcqoy.editInFile")).description(OptionDescription.of(desc)).action((s, o) -> Util.getOperatingSystem().open(FabricLoader.getInstance().getConfigDir().toFile())).build());
 	}
 
 	private static Color colorOrWhite(String string, boolean alpha) {
