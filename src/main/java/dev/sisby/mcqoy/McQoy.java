@@ -39,9 +39,9 @@ import folk.sisby.kaleido.lib.quiltconfig.impl.values.ValueListImpl;
 import folk.sisby.kaleido.lib.quiltconfig.impl.values.ValueMapImpl;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Util;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -121,21 +121,21 @@ public class McQoy implements ModInitializer {
 
 	public static Screen createScreen(Screen parent, String modId, Collection<Config> configs) {
 		String modName = FabricLoader.getInstance().getModContainer(modId).get().getMetadata().getName();
-		final YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder().title(Text.of("Config: " + modName));
+		final YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder().title(Component.nullToEmpty("Config: " + modName));
 		LinkedHashMap<String, ConfigCategory.Builder> categories = new LinkedHashMap<>();
 		for (Config config : configs) {
 			String simpleName = config.family().isEmpty() ? config.id() : config.family();
-			Text configDisplayName = configs.size() == 1 ? Text.of(modName) : getDisplayName(config, simpleName, NamingSchemes.TITLE_CASE);
+			Component configDisplayName = configs.size() == 1 ? Component.nullToEmpty(modName) : getDisplayName(config, simpleName, NamingSchemes.TITLE_CASE);
 			ConfigCategory.Builder category;
 			for (TrackedValue<?> field : config.values()) {
 				if (field.key().length() == 1) { // No Section
 					category = categories.computeIfAbsent(configDisplayName.getString(), k -> ConfigCategory.createBuilder().name(configDisplayName));
 				} else { // With section, take topmost
 					ValueTreeNode topSection = config.getNode(Collections.singletonList(field.key().getKeyComponent(0)));
-					Text sectionDisplayName = getDisplayName(topSection, topSection.key().getLastComponent(), NamingSchemes.TITLE_CASE);
+					Component sectionDisplayName = getDisplayName(topSection, topSection.key().getLastComponent(), NamingSchemes.TITLE_CASE);
 					category = categories.computeIfAbsent(sectionDisplayName.getString(), k -> ConfigCategory.createBuilder().name(sectionDisplayName));
 				}
-				mapAndAddField(config, field, category, getDisplayName(field, field.key().getLastComponent(), NamingSchemes.SPACE_SEPARATED_LOWER_CASE_INITIAL_UPPER_CASE), getComments(field).stream().map(Text::of).toArray(Text[]::new));
+				mapAndAddField(config, field, category, getDisplayName(field, field.key().getLastComponent(), NamingSchemes.SPACE_SEPARATED_LOWER_CASE_INITIAL_UPPER_CASE), getComments(field).stream().map(Component::nullToEmpty).toArray(Component[]::new));
 			}
 		}
 		for (ConfigCategory.Builder s : categories.values()) {
@@ -147,7 +147,7 @@ public class McQoy implements ModInitializer {
 	}
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
-	private static void mapAndAddField(Config config, TrackedValue<?> field, ConfigCategory.Builder category, Text displayName, Text[] description) {
+	private static void mapAndAddField(Config config, TrackedValue<?> field, ConfigCategory.Builder category, Component displayName, Component[] description) {
 		Constraint.Range<?> tempRangeConstraint = null;
 		boolean color = false;
 		boolean tempAlpha = false;
@@ -204,15 +204,15 @@ public class McQoy implements ModInitializer {
 		}
 	}
 
-	private static void incompatibleOption(Config config, ConfigCategory.Builder category, Text displayName, Text[] description) {
-		Text[] desc = Stream.concat(
+	private static void incompatibleOption(Config config, ConfigCategory.Builder category, Component displayName, Component[] description) {
+		Component[] desc = Stream.concat(
 			Arrays.stream(description),
 			Stream.of(
-				Text.of(""),
-				Text.of(String.format("Only editable via %s", (config.family().isEmpty() ? "" : (config.family() + "/")) + config.id() + ".toml")).copy().formatted(Formatting.YELLOW),
-				Text.of("Exit the game first.").copy().formatted(Formatting.RED)
-			)).toArray(Text[]::new);
-		category.option(ButtonOption.createBuilder().name(displayName).text(Text.of("Edit in file...")).description(OptionDescription.of(desc)).action((s, o) -> Util.getOperatingSystem().open(FabricLoader.getInstance().getConfigDir().toFile())).build());
+				Component.nullToEmpty(""),
+				Component.nullToEmpty(String.format("Only editable via %s", (config.family().isEmpty() ? "" : (config.family() + "/")) + config.id() + ".toml")).copy().withStyle(ChatFormatting.YELLOW),
+				Component.nullToEmpty("Exit the game first.").copy().withStyle(ChatFormatting.RED)
+			)).toArray(Component[]::new);
+		category.option(ButtonOption.createBuilder().name(displayName).text(Component.nullToEmpty("Edit in file...")).description(OptionDescription.of(desc)).action((s, o) -> Util.getPlatform().openFile(FabricLoader.getInstance().getConfigDir().toFile())).build());
 	}
 
 	private static Color colorOrWhite(String string, boolean alpha) {
@@ -227,13 +227,13 @@ public class McQoy implements ModInitializer {
 		return "#" + StringUtils.leftPad(Integer.toHexString(color.getRGB() & (alpha ? 0xFF_FFFFFF : 0x00_FFFFFF)), alpha ? 8 : 6, "0");
 	}
 
-	private static <T, C> void singleOption(TrackedValue<T> field, ConfigCategory.Builder category, Text displayName, Text[] description, Function<Option<C>, ControllerBuilder<C>> controller, Function<T, C> getBinder, Function<C, T> setBinder) {
+	private static <T, C> void singleOption(TrackedValue<T> field, ConfigCategory.Builder category, Component displayName, Component[] description, Function<Option<C>, ControllerBuilder<C>> controller, Function<T, C> getBinder, Function<C, T> setBinder) {
 		category.option(Option.<C>createBuilder().name(displayName).description(OptionDescription.of(description)).binding(getBinder.apply(field.getDefaultValue()), () -> getBinder.apply(field.value()), v -> {
 			if (field.checkForFailingConstraints(setBinder.apply(v)).isEmpty()) field.setValue(setBinder.apply(v));
 		}).controller(controller).build());
 	}
 
-	private static <T, C> void listOption(TrackedValue<ValueList<T>> field, ConfigCategory.Builder category, Text displayName, Text[] description, Function<Option<C>, ControllerBuilder<C>> controller, Function<T, C> getBinder, Function<C, T> setBinder) {
+	private static <T, C> void listOption(TrackedValue<ValueList<T>> field, ConfigCategory.Builder category, Component displayName, Component[] description, Function<Option<C>, ControllerBuilder<C>> controller, Function<T, C> getBinder, Function<C, T> setBinder) {
 		category.group(ListOption.<C>createBuilder().name(displayName).description(OptionDescription.of(description)).binding(field.getDefaultValue().stream().map(getBinder).collect(Collectors.toList()), () -> field.value().stream().map(getBinder).collect(Collectors.toList()),
 			l -> {
 				if (field.checkForFailingConstraints(new ValueListImpl<T>(field.value().getDefaultValue(), l.stream().map(setBinder).collect(Collectors.toList()))).isPresent()) return;
@@ -243,7 +243,7 @@ public class McQoy implements ModInitializer {
 		).controller(controller).initial(getBinder.apply(field.getDefaultValue().getDefaultValue())).build());
 	}
 
-	private static <T, C> void mapOption(TrackedValue<ValueMap<T>> field, ConfigCategory.Builder category, Text displayName, Text[] description, Function<Option<C>, ControllerBuilder<C>> valueController, Function<T, C> getBinder, Function<C, T> setBinder) {
+	private static <T, C> void mapOption(TrackedValue<ValueMap<T>> field, ConfigCategory.Builder category, Component displayName, Component[] description, Function<Option<C>, ControllerBuilder<C>> valueController, Function<T, C> getBinder, Function<C, T> setBinder) {
 		category.group(ListOption.<Map.Entry<String, C>>createBuilder().name(displayName).description(OptionDescription.of(description)).binding(
 			field.getDefaultValue().entrySet().stream().map(e -> Map.entry(e.getKey(), getBinder.apply(e.getValue()))).collect(Collectors.toList()),
 			() -> field.value().entrySet().stream().map(e -> Map.entry(e.getKey(), getBinder.apply(e.getValue()))).collect(Collectors.toList()),
@@ -256,14 +256,14 @@ public class McQoy implements ModInitializer {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <T extends Enum<T>> void enumOption(TrackedValue<?> field, ConfigCategory.Builder category, Text displayName, Text[] description, T defaultValue) {
+	private static <T extends Enum<T>> void enumOption(TrackedValue<?> field, ConfigCategory.Builder category, Component displayName, Component[] description, T defaultValue) {
 		category.option(Option.<T>createBuilder().name(displayName).description(OptionDescription.of(description)).binding(defaultValue, () -> (T) field.value(), v -> ((TrackedValue<T>) field).setValue(v)).controller(
 			o -> EnumControllerBuilder.create(o).enumClass(defaultValue.getDeclaringClass())
 		).build());
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <T extends Enum<T>> void enumListOption(TrackedValue<?> field, ConfigCategory.Builder category, Text displayName, Text[] description, ValueList<?> defaultList, T defaultValue) {
+	private static <T extends Enum<T>> void enumListOption(TrackedValue<?> field, ConfigCategory.Builder category, Component displayName, Component[] description, ValueList<?> defaultList, T defaultValue) {
 		category.group(ListOption.<T>createBuilder().name(displayName).description(OptionDescription.of(description)).binding((List<T>) defaultList, () -> (ValueList<T>) field.value(),
 			l -> {
 				((TrackedValue<ValueList<T>>) field).value().clear();
@@ -273,7 +273,7 @@ public class McQoy implements ModInitializer {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <T extends Enum<T>> void enumMapOption(TrackedValue<?> field, ConfigCategory.Builder category, Text displayName, Text[] description, T defaultValue) {
+	private static <T extends Enum<T>> void enumMapOption(TrackedValue<?> field, ConfigCategory.Builder category, Component displayName, Component[] description, T defaultValue) {
 		category.group(ListOption.<Map.Entry<String, T>>createBuilder().name(displayName).description(OptionDescription.of(description)).binding(
 			((TrackedValue<ValueMap<T>>) field).getDefaultValue().entrySet().stream().collect(Collectors.toList()),
 			() -> ((TrackedValue<ValueMap<T>>) field).value().entrySet().stream().collect(Collectors.toList()),
@@ -303,7 +303,7 @@ public class McQoy implements ModInitializer {
 		return opt -> FloatSliderControllerBuilder.create(opt)
 			.range((Float) rangeConstraint.min(), (Float) rangeConstraint.max())
 			.step(0.01F)
-			.formatValue(f -> Text.of(String.format("%.2f", f)));
+			.formatValue(f -> Component.nullToEmpty(String.format("%.2f", f)));
 	}
 
 	private static Function<Option<Double>, ControllerBuilder<Double>> doubleOrSliderController(Constraint.Range<?> rangeConstraint) {
@@ -311,14 +311,14 @@ public class McQoy implements ModInitializer {
 		return opt -> DoubleSliderControllerBuilder.create(opt)
 			.range((Double) rangeConstraint.min(), (Double) rangeConstraint.max())
 			.step(0.01)
-			.formatValue(f -> Text.of(String.format("%.2f", f)));
+			.formatValue(f -> Component.nullToEmpty(String.format("%.2f", f)));
 	}
 
-	public static Text getDisplayName(MetadataContainer value, String fallback, NamingScheme fallbackScheme) {
+	public static Component getDisplayName(MetadataContainer value, String fallback, NamingScheme fallbackScheme) {
 		if (value.hasMetadata(DisplayName.TYPE)) {
-			return Text.of(value.metadata(DisplayName.TYPE).getName());
+			return Component.nullToEmpty(value.metadata(DisplayName.TYPE).getName());
 		} else {
-			return Text.of((value.hasMetadata(DisplayNameConvention.TYPE) ? value.metadata(DisplayNameConvention.TYPE) : fallbackScheme).coerce(fallback));
+			return Component.nullToEmpty((value.hasMetadata(DisplayNameConvention.TYPE) ? value.metadata(DisplayNameConvention.TYPE) : fallbackScheme).coerce(fallback));
 		}
 	}
 

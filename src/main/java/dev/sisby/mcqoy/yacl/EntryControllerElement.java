@@ -5,7 +5,9 @@ import dev.isxander.yacl3.gui.AbstractWidget;
 import dev.isxander.yacl3.gui.YACLScreen;
 import dev.isxander.yacl3.gui.controllers.ControllerWidget;
 import dev.isxander.yacl3.gui.controllers.TickBoxController;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 
 public class EntryControllerElement<T> extends ControllerWidget<EntryController<T>> {
 	private final AbstractWidget keyWidget;
@@ -18,17 +20,17 @@ public class EntryControllerElement<T> extends ControllerWidget<EntryController<
 	}
 
 	@Override
-	public boolean mouseClicked(double mouseX, double mouseY, int button) {
-		return keyWidget.mouseClicked(mouseX, mouseY, button) || valueWidget.mouseClicked(mouseX, mouseY, button);
+	public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean doubleClick) {
+		return keyWidget.mouseClicked(mouseButtonEvent, doubleClick) || valueWidget.mouseClicked(mouseButtonEvent, doubleClick);
 	}
 
 	@Override
-	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-		return keyWidget.keyPressed(keyCode, scanCode, modifiers) || valueWidget.keyPressed(keyCode, scanCode, modifiers);
+	public boolean keyPressed(KeyEvent keyEvent) {
+		return keyWidget.keyPressed(keyEvent) || valueWidget.keyPressed(keyEvent);
 	}
 
 	@Override
-	public void render(DrawContext graphics, int mouseX, int mouseY, float delta) {
+	public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
 		keyWidget.render(graphics, mouseX, mouseY, delta);
 		valueWidget.render(graphics, mouseX, mouseY, delta);
 	}

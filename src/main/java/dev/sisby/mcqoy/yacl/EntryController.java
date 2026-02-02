@@ -6,11 +6,11 @@ import dev.isxander.yacl3.api.controller.ControllerBuilder;
 import dev.isxander.yacl3.api.utils.Dimension;
 import dev.isxander.yacl3.gui.AbstractWidget;
 import dev.isxander.yacl3.gui.YACLScreen;
-import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 import java.util.function.Function;
+import net.minecraft.network.chat.Component;
 
 public class EntryController<T> implements Controller<Map.Entry<String, T>> {
 	private final Option<Map.Entry<String, T>> option;
@@ -29,8 +29,8 @@ public class EntryController<T> implements Controller<Map.Entry<String, T>> {
 	}
 
 	@Override
-	public Text formatValue() {
-		return Text.literal(option.pendingValue().toString());
+	public Component formatValue() {
+		return Component.literal(option.pendingValue().toString());
 	}
 
 	@Override
