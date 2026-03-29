@@ -5,7 +5,7 @@ import dev.isxander.yacl3.gui.AbstractWidget;
 import dev.isxander.yacl3.gui.YACLScreen;
 import dev.isxander.yacl3.gui.controllers.ControllerWidget;
 import dev.isxander.yacl3.gui.controllers.TickBoxController;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 
@@ -30,9 +30,9 @@ public class EntryControllerElement<T> extends ControllerWidget<EntryController<
 	}
 
 	@Override
-	public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
-		keyWidget.render(graphics, mouseX, mouseY, delta);
-		valueWidget.render(graphics, mouseX, mouseY, delta);
+	public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+		keyWidget.extractRenderState(graphics, mouseX, mouseY, delta);
+		valueWidget.extractRenderState(graphics, mouseX, mouseY, delta);
 	}
 
 	@Override

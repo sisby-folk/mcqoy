@@ -4,12 +4,12 @@ githubRelease = "2.4.1"
 minotaur = "2.+"
 curse = "1.1.+"
 
-mc = "26.1-snapshot-5"
+mc = "26.1"
 fl = "0.18.4"
-fapi = "0.143.0+26.1"
+fapi = "0.144.3+26.1"
 kaleido = "0.3.3+1.3.2"
-yacl = "3.8.2+26.1.0-fabric"
-modmenu = "18.0.0-alpha.5"
+yacl = "3.9.1+26.1-fabric"
+modmenu = "18.0.0-alpha.8"
 
 [plugins]
 loom = { id = "net.fabricmc.fabric-loom", version.ref = "loom" }
