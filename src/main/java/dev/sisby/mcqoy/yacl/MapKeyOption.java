@@ -10,7 +10,6 @@ import dev.isxander.yacl3.api.OptionFlag;
 import dev.isxander.yacl3.api.StateManager;
 import dev.isxander.yacl3.api.controller.ControllerBuilder;
 import dev.isxander.yacl3.impl.ProvidesBindingForDeprecation;
-import net.minecraft.text.Text;
 import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,6 +17,7 @@ import java.util.AbstractMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import net.minecraft.network.chat.Component;
 
 public class MapKeyOption<T> implements Option<String> {
 	private final Option<Map.Entry<String, T>> mapOption;
@@ -37,8 +37,8 @@ public class MapKeyOption<T> implements Option<String> {
 	}
 
 	@Override
-	public @NotNull Text name() {
-		return Text.empty();
+	public @NotNull Component name() {
+		return Component.empty();
 	}
 
 	@Override
@@ -47,7 +47,7 @@ public class MapKeyOption<T> implements Option<String> {
 	}
 
 	@Override
-	public @NotNull Text tooltip() {
+	public @NotNull Component tooltip() {
 		return mapOption.tooltip();
 	}
 

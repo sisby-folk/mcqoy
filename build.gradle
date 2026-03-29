@@ -9,7 +9,10 @@ plugins {
 }
 
 version = "$modVersion+$branchName"
-archivesBaseName = project.slug
+
+base {
+	archivesName = project.slug
+}
 
 repositories {
 	maven { url "https://repo.sleeping.town/" }
@@ -19,14 +22,13 @@ repositories {
 
 dependencies {
 	minecraft libs.mc
-	mappings variantOf(libs.yarn) { classifier "v2" }
 
-	modImplementation libs.fl
+	implementation libs.fl
 	implementation libs.kaleido
-	modImplementation libs.yacl
-	modImplementation libs.modmenu
+	implementation libs.yacl
+	implementation libs.modmenu
 
-	modRuntimeOnly libs.fapi
+	implementation libs.fapi
 
 	include libs.kaleido
 }
@@ -56,18 +58,18 @@ processResources {
 
 tasks.withType(JavaCompile).configureEach {
 	it.options.encoding = "UTF-8"
-	it.options.release = 17
+	it.options.release = 25
 }
 
 java {
 	withSourcesJar()
 	sourceCompatibility = JavaVersion.VERSION_1_8
-	targetCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_25
 }
 
 jar {
 	from("LICENSE") {
-		rename { "${it}_${archivesBaseName}" }
+		rename { "${it}_${base.archivesName}" }
 	}
 }
 
@@ -87,7 +89,7 @@ githubRelease {
 	repo = slug
 	tagName = "v${modVersion}"
 	targetCommitish = branchName
-	releaseAssets = remapJar
+	releaseAssets = jar
 	allowUploadToExisting = true
 	generateReleaseNotes = true
 	body = !file("CHANGELOG.md").exists() ? "" : rootProject.file("CHANGELOG.md").text
@@ -97,7 +99,7 @@ modrinth {
 	token = "$System.env.MODRINTH_TOKEN"
 	projectId = slug
 	versionNumber = project.version
-	uploadFile = remapJar
+	uploadFile = jar
 	gameVersions = compatibleVersions.split(", ").toList()
 	loaders = compatibleLoaders.split(", ").toList()
 	changelog = !file("CHANGELOG.md").exists() ? "" : rootProject.file("CHANGELOG.md").text + "\n\nChangelog: https://github.com/${user}/${slug}/releases/tag/v${modVersion}"
@@ -112,7 +114,7 @@ tasks.register('curseforge', net.darkhax.curseforgegradle.TaskPublishCurseForge)
 	apiToken = "$System.env.CURSEFORGE_TOKEN"
 	disableVersionDetection()
 	def projectId = "1402884"
-	def mainFile = upload(projectId, remapJar)
+	def mainFile = upload(projectId, jar)
 	compatibleLoaders.split(", ").toList().forEach { mainFile.addModLoader(it) }
 	compatibleVersions.split(", ").toList().forEach { mainFile.addGameVersion(it) }
 	mainFile.addEnvironment("client")
